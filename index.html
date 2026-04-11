@@ -146,7 +146,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="logo">ล</div>
     <div>
       <div class="brand-name">บริษัทลูกจันทร์</div>
-      <div class="brand-sub">รายรับรายจ่าย — เมษายน 2026</div>
+      <div class="brand-sub" id="brandSub">รายรับรายจ่าย — เมษายน 2026</div>
     </div>
   </div>
   <div class="topbar-r">
@@ -156,10 +156,19 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
 </div>
 
-<!-- SECTION SWITCHER -->
-<div class="section-bar">
-  <button class="sec-btn active" onclick="switchSection('restaurant',this)">🍜 ร้านอาหาร</button>
-  <button class="sec-btn" onclick="switchSection('wedding',this)">💍 Wedding</button>
+<!-- MONTH + SECTION BAR -->
+<div class="section-bar" style="justify-content:space-between;align-items:center;padding-right:16px;">
+  <div style="display:flex;gap:0;">
+    <button class="sec-btn active" onclick="switchSection('restaurant',this)">🍜 ร้านอาหาร</button>
+    <button class="sec-btn" onclick="switchSection('wedding',this)">💍 Wedding</button>
+    <button class="sec-btn" onclick="switchSection('growth',this)">📈 เปรียบเทียบเดือน</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span style="font-size:11px;color:var(--muted);">เดือน:</span>
+    <select id="monthSelect" onchange="switchMonth(this.value)"
+      style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:12px;cursor:pointer;">
+    </select>
+  </div>
 </div>
 
 <!-- ═══ RESTAURANT SECTION ═══ -->
@@ -373,23 +382,112 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 </div><!-- /sec-wedding -->
 
+<!-- ═══ GROWTH SECTION ═══ -->
+<div id="sec-growth" class="wrap" style="display:none;">
+  <div style="margin-bottom:16px;">
+    <p style="font-size:13px;color:var(--muted);line-height:1.8;">
+      เปรียบเทียบข้อมูลข้ามเดือน — ต้องโหลดข้อมูลอย่างน้อย 2 เดือนขึ้นไป<br>
+      <span id="growthStatus" style="color:var(--yellow);font-size:12px;"></span>
+    </p>
+  </div>
+
+  <!-- GROWTH METRICS -->
+  <div class="metrics" id="growthMetrics" style="display:none;">
+    <div class="mc g"><div class="mc-lbl">รายรับสูงสุด</div><div class="mc-val" id="g-maxIncome">—</div><div class="mc-sub" id="g-maxIncomeMonth"></div></div>
+    <div class="mc r"><div class="mc-lbl">รายจ่ายสูงสุด</div><div class="mc-val" id="g-maxExpense">—</div><div class="mc-sub" id="g-maxExpenseMonth"></div></div>
+    <div class="mc b"><div class="mc-lbl">กำไรสูงสุด</div><div class="mc-val" id="g-maxProfit">—</div><div class="mc-sub" id="g-maxProfitMonth"></div></div>
+    <div class="mc y"><div class="mc-lbl">เดือนที่ดีที่สุด</div><div class="mc-val" id="g-bestMonth">—</div></div>
+  </div>
+
+  <!-- GROWTH CHARTS -->
+  <div class="grid2" id="growthCharts" style="display:none;">
+    <div class="card">
+      <div class="card-title" style="color:var(--green)">รายรับรายเดือน</div>
+      <div style="position:relative;height:240px;"><canvas id="gIncomeC" role="img" aria-label="Monthly income trend"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--red)">รายจ่ายรายเดือน</div>
+      <div style="position:relative;height:240px;"><canvas id="gExpenseC" role="img" aria-label="Monthly expense trend"></canvas></div>
+    </div>
+  </div>
+  <div class="card" id="growthProfitCard" style="display:none;margin-top:0;">
+    <div class="card-title" style="color:var(--yellow)">กำไร/ขาดทุน รายเดือน</div>
+    <div class="legend">
+      <div class="leg"><div class="leg-sq" style="background:var(--green)"></div>กำไร</div>
+      <div class="leg"><div class="leg-sq" style="background:var(--red)"></div>ขาดทุน</div>
+    </div>
+    <div style="position:relative;height:240px;"><canvas id="gProfitC" role="img" aria-label="Monthly profit trend"></canvas></div>
+  </div>
+
+  <!-- GROWTH TABLE -->
+  <div class="card" id="growthTableCard" style="display:none;margin-top:12px;">
+    <div class="card-title" style="color:var(--blue)">สรุปเปรียบเทียบรายเดือน</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr id="growthHead"></tr></thead>
+        <tbody id="growthBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="growthEmpty" style="text-align:center;padding:60px 20px;color:var(--muted);">
+    <div style="font-size:40px;margin-bottom:12px;">📊</div>
+    <div style="font-size:15px;font-weight:500;margin-bottom:6px;">ยังไม่มีข้อมูลเปรียบเทียบ</div>
+    <div style="font-size:12px;">เพิ่มเดือนถัดไปใน MONTHS config แล้วโหลดข้อมูลอีกครั้ง</div>
+    <div style="margin-top:16px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;text-align:left;max-width:500px;margin-left:auto;margin-right:auto;">
+      <div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:8px;">วิธีเพิ่มเดือนใหม่:</div>
+      <div style="font-size:11px;color:var(--muted);line-height:2;">
+        1. เปิดไฟล์ HTML ด้วย text editor<br>
+        2. หา <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;color:var(--blue)">const MONTHS = [</code><br>
+        3. Uncomment และกรอก sheetId + gids ของเดือนใหม่<br>
+        4. อัปโหลดไฟล์ขึ้น GitHub แทนอันเก่า
+      </div>
+    </div>
+  </div>
+</div><!-- /sec-growth -->
+
 <script>
 // ══════════════════════════════════════════════
-// HARDCODED CONFIG — GIDs ของบริษัทลูกจันทร์
+// MONTHS CONFIG — เพิ่มเดือนใหม่ที่นี่
 // ══════════════════════════════════════════════
-const SHEET_ID = '2PACX-1vQlrlkOZQrT6rn8uaC3cPzqA52lRkzBkDszAkhaS4hk-LzDdFYNDzeQWOoPX0HpQnXZtin3QS00a1pG';
-const GIDS = {
-  summary:     '239909121',
-  restaurant:  '196080681',
-  kbankIn:     '1961079333',
-  kbankOut:    '881911619',
-  expDetail:   '1607322378',
-  expSum:      '1477691262',
-  weddingSum:  '1098787073',
-  weddingIn:   '1980572075',
-  weddingOut:  '424100009',
-};
+const MONTHS = [
+  {
+    label: 'เมษายน 2026',
+    sheetId: '2PACX-1vQlrlkOZQrT6rn8uaC3cPzqA52lRkzBkDszAkhaS4hk-LzDdFYNDzeQWOoPX0HpQnXZtin3QS00a1pG',
+    gids: {
+      summary:    '239909121',
+      restaurant: '196080681',
+      kbankIn:    '1961079333',
+      kbankOut:   '881911619',
+      expDetail:  '1607322378',
+      expSum:     '1477691262',
+      weddingSum: '1098787073',
+      weddingIn:  '1980572075',
+      weddingOut: '424100009',
+    }
+  },
+  // ── เพิ่มเดือนถัดไปแบบนี้ ──
+  // {
+  //   label: 'พฤษภาคม 2026',
+  //   sheetId: 'PACX-1v...ใส่ sheetId ของชีทเดือนใหม่...',
+  //   gids: {
+  //     summary:    '...gid...',
+  //     restaurant: '...gid...',
+  //     kbankIn:    '...gid...',
+  //     kbankOut:   '...gid...',
+  //     expDetail:  '...gid...',
+  //     expSum:     '...gid...',
+  //     weddingSum: '...gid...',
+  //     weddingIn:  '...gid...',
+  //     weddingOut: '...gid...',
+  //   }
+  // },
+];
 const AUTO_REFRESH = 60; // วินาที
+let currentMonthIdx = 0;
+// สร้าง SHEET_ID และ GIDS แบบ dynamic จาก currentMonthIdx
+let SHEET_ID = MONTHS[0].sheetId;
+let GIDS     = MONTHS[0].gids;
 
 // ══════════════════════════════════════════════
 // CORS PROXIES
@@ -546,6 +644,9 @@ function scheduleRefresh() {
 function renderAll() {
   if(D.summary)    renderSummary(D.summary);
   if(D.restaurant) renderRestaurant(D.restaurant);
+  // save snapshot for growth comparison
+  const label = MONTHS[currentMonthIdx].label;
+  if(D.summary) saveMonthSnapshot(label, D.summary, D.restaurant);
   if(D.kbankIn)    renderKbankIn(D.kbankIn);
   if(D.kbankOut)   renderKbankOut(D.kbankOut);
   if(D.expDetail)  renderExpDetail(D.expDetail);
@@ -971,17 +1072,172 @@ function showTab(name, section, btn) {
   btn.classList.add('active');
 }
 
+// switchSection moved to INIT block
+
+// ══════════════════════════════════════════════
+// MONTH SWITCHING
+// ══════════════════════════════════════════════
+// monthData เก็บ summary ของแต่ละเดือน {label, income, expense, profit, ...}
+let monthData = {};
+
+function buildMonthSelect() {
+  const sel = $('monthSelect');
+  sel.innerHTML = MONTHS.map((m,i)=>
+    `<option value="${i}">${m.label}</option>`
+  ).join('');
+  sel.value = currentMonthIdx;
+}
+
+async function switchMonth(idx) {
+  currentMonthIdx = parseInt(idx);
+  const m = MONTHS[currentMonthIdx];
+  SHEET_ID = m.sheetId;
+  GIDS     = m.gids;
+  // reset data + charts
+  D = {}; charts = {};
+  $('brandSub').textContent = 'รายรับรายจ่าย — ' + m.label;
+  await loadAll(true);
+}
+
+// ══════════════════════════════════════════════
+// GROWTH — เปรียบเทียบหลายเดือน
+// ══════════════════════════════════════════════
+function saveMonthSnapshot(label, summaryRows, restaurantRows) {
+  if(!summaryRows || summaryRows.length < 6) return;
+  const get = i => parseNum(summaryRows[i]?.[1]);
+  const kIncome  = get(2);
+  const kExpense = get(3);
+  const kNet     = get(4);
+  const mIncome  = get(9);
+  const mExpense = get(10);
+  const mNet     = get(11);
+  const overall  = kNet + mNet;
+
+  // restaurant totals
+  let rIncome = 0, rExpense = 0;
+  if(restaurantRows && restaurantRows.length > 1) {
+    const data = restaurantRows.slice(1).filter(r=>r[0]&&!isNaN(parseFloat(r[0])));
+    const h = restaurantRows[0];
+    const fi = kws => h.findIndex(x=>kws.some(k=>(x||'').includes(k)));
+    const tI = fi(['รายได้ทั้งหมด','เงินเข้าทั้งหมด']);
+    const eI = fi(['รายจ่ายทั้งหมด']);
+    data.forEach(r=>{ rIncome+=parseNum(r[tI>0?tI:4]); rExpense+=parseNum(r[eI>0?eI:6]); });
+  }
+
+  monthData[label] = { label, kIncome, kExpense, kNet, mIncome, mExpense, mNet, overall, rIncome, rExpense };
+}
+
+function renderGrowth() {
+  const months = Object.values(monthData);
+  const labels = months.map(m=>m.label);
+
+  if(months.length < 1) {
+    $('growthEmpty').style.display='block';
+    $('growthMetrics').style.display='none';
+    $('growthCharts').style.display='none';
+    $('growthProfitCard').style.display='none';
+    $('growthTableCard').style.display='none';
+    return;
+  }
+
+  $('growthEmpty').style.display='none';
+  $('growthMetrics').style.display='grid';
+  $('growthCharts').style.display='grid';
+  $('growthProfitCard').style.display='block';
+  $('growthTableCard').style.display='block';
+
+  // Best month stats
+  const best = months.reduce((a,b)=>b.overall>a.overall?b:a);
+  const maxInc = months.reduce((a,b)=>b.kIncome>a.kIncome?b:a);
+  const maxExp = months.reduce((a,b)=>b.kExpense>a.kExpense?b:a);
+  $('g-maxIncome').textContent = fmtShort(maxInc.kIncome);
+  $('g-maxIncomeMonth').textContent = maxInc.label;
+  $('g-maxExpense').textContent = fmtShort(maxExp.kExpense);
+  $('g-maxExpenseMonth').textContent = maxExp.label;
+  $('g-maxProfit').textContent = fmtShort(best.overall);
+  $('g-maxProfitMonth').textContent = best.label;
+  $('g-bestMonth').textContent = best.label;
+
+  const mkChart = (id, datasets, color) => {
+    if(charts[id]) charts[id].destroy();
+    charts[id] = new Chart($(id), {
+      type:'bar',
+      data:{ labels, datasets },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+fmtFull(ctx.raw)}} },
+        scales:{
+          x:{ticks:{color:'#6e7681',font:{size:11}},grid:{display:false}},
+          y:{ticks:{color:'#6e7681',callback:v=>'฿'+(v/1000).toFixed(0)+'K',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}}
+        }
+      }
+    });
+  };
+
+  mkChart('gIncomeC',  [{data:months.map(m=>m.kIncome),  backgroundColor:'rgba(63,185,80,.75)',  borderRadius:5}]);
+  mkChart('gExpenseC', [{data:months.map(m=>m.kExpense), backgroundColor:'rgba(248,81,73,.75)',  borderRadius:5}]);
+
+  // Profit bar — green/red per bar
+  const profits = months.map(m=>m.overall);
+  if(charts.gProfit) charts.gProfit.destroy();
+  charts.gProfit = new Chart($('gProfitC'), {
+    type:'bar',
+    data:{ labels, datasets:[{
+      data: profits,
+      backgroundColor: profits.map(v=>v>=0?'rgba(63,185,80,.8)':'rgba(248,81,73,.8)'),
+      borderRadius:5
+    }]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+fmtFull(ctx.raw)}} },
+      scales:{
+        x:{ticks:{color:'#6e7681',font:{size:11}},grid:{display:false}},
+        y:{ticks:{color:'#6e7681',callback:v=>'฿'+(v/1000).toFixed(0)+'K',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}}
+      }
+    }
+  });
+
+  // Summary table
+  const gHeaders = ['เดือน','รายรับกสิกร','รายจ่ายกสิกร','กำไร/ขาดทุน (กสิกร)','รายได้บัญชีแม่','รายจ่ายบัญชีแม่','กำไรโดยรวม'];
+  $('growthHead').innerHTML = gHeaders.map((h,i)=>`<th${i>0?' style="text-align:right"':''}>${h}</th>`).join('');
+  $('growthBody').innerHTML = months.map(m=>{
+    const cells = [
+      `<td style="font-weight:600;white-space:nowrap">${m.label}</td>`,
+      `<td class="num pos">${fmtFull(m.kIncome)}</td>`,
+      `<td class="num neg">${fmtFull(m.kExpense)}</td>`,
+      `<td class="num ${m.kNet>=0?'pos':'neg'}" style="font-weight:600">${fmtFull(m.kNet)}</td>`,
+      `<td class="num pos">${fmtFull(m.mIncome)}</td>`,
+      `<td class="num neg">${fmtFull(m.mExpense)}</td>`,
+      `<td class="num ${m.overall>=0?'pos':'neg'}" style="font-weight:700">${fmtFull(m.overall)}</td>`,
+    ];
+    return '<tr>'+cells.join('')+'</tr>';
+  }).join('');
+
+  if(months.length >= 2) {
+    $('growthStatus').textContent = `มีข้อมูล ${months.length} เดือน — ${labels.join(', ')}`;
+  }
+}
+
+// patch renderSummary to also save snapshot
+const _origRenderAll = renderAll;
+
+// ══════════════════════════════════════════════
+// SECTION SWITCHING (updated)
+// ══════════════════════════════════════════════
 function switchSection(sec, btn) {
   $('sec-restaurant').style.display = sec==='restaurant'?'block':'none';
   $('sec-wedding').style.display    = sec==='wedding'?'block':'none';
+  $('sec-growth').style.display     = sec==='growth'?'block':'none';
   document.querySelectorAll('.sec-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  if(sec==='growth') renderGrowth();
 }
 
 // ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
-window.onload = () => loadAll();
+window.onload = () => {
+  buildMonthSelect();
+  loadAll();
+};
 </script>
 </body>
 </html>
