@@ -174,6 +174,19 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
   <!-- TAB: SUMMARY -->
   <div id="rtab-summary">
+
+    <!-- OVERALL PROFIT BANNER -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 22px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:500;letter-spacing:.05em;">กำไรโดยรวม (กสิกร + บัญชีแม่)</div>
+        <div style="font-size:11px;color:var(--muted2);" id="s-overall-formula">—</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:30px;font-weight:700;" id="s-overall">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">กำไรโดยประมาณทั้งหมด</div>
+      </div>
+    </div>
+
     <div class="sec-label">บัญชีกสิกร</div>
     <div class="metrics">
       <div class="mc b"><div class="mc-lbl">เงินยืมกรรมการ</div><div class="mc-val" id="s-capital">—</div></div>
@@ -556,6 +569,16 @@ function renderSummary(rows) {
   $('s-mnet').textContent = fmtShort(mnet);
   $('s-mnet').style.color = mnet>=0?'var(--green)':'var(--red)';
 
+  // ★ OVERALL PROFIT = knet + mnet
+  const overall = knet + mnet;
+  const el = $('s-overall');
+  el.textContent = fmtFull(overall);
+  el.style.color = overall>=0?'var(--green)':'var(--red)';
+  $('s-overall-formula').textContent =
+    `(รายได้กสิกร ${fmtShort(get(2))} − รายจ่ายกสิกร ${fmtShort(get(3))}) + (รายได้บัญชีแม่ ${fmtShort(get(9))} − รายจ่ายบัญชีแม่ ${fmtShort(get(10))})`;
+  // update banner border color
+  $('s-overall').closest('div[style*="border-radius:14px"]').style.borderColor = overall>=0?'rgba(63,185,80,.3)':'rgba(248,81,73,.3)';
+
   // Donut
   const inc=get(2), exp=get(3);
   const ip = inc+exp>0?Math.round(inc/(inc+exp)*100):0;
@@ -682,15 +705,22 @@ function renderKbankOut(rows) {
   const headers=rows[0];
   const data=rows.slice(1).filter(r=>r[0]&&!isNaN(parseFloat(r[0])));
   const sumRow=rows.find(r=>(r[0]||'').includes('สรุป'));
-  const si=i=>parseNum(sumRow?.[i]);
-  const fi=(kws)=>headers.findIndex(h=>kws.some(k=>(h||'').includes(k)));
+  const fi=(kws)=>headers.findIndex(h=>kws.some(k=>(h||'').toLowerCase().includes(k.toLowerCase())));
+  const sh=i=>parseNum(sumRow?.[i]);
 
-  $('ko-bill').textContent    = fmtShort(si(1));
-  $('ko-wage').textContent    = fmtShort(si(2));
-  $('ko-salary').textContent  = fmtShort(si(3));
-  $('ko-water').textContent   = fmtShort(si(4));
-  $('ko-electric').textContent= fmtShort(si(5));
-  $('ko-total').textContent   = fmtShort(si(headers.length-1));
+  const billI   = fi(['รายจ่ายใบ','ใบรายการ']);
+  const wageI   = fi(['จัดจ้าง','ค่าจ้าง']);
+  const salaryI = fi(['เงินเดือน','salary']);
+  const waterI  = fi(['ค่าน้ำ','น้ำ']);
+  const elecI   = fi(['ค่าไฟ','ไฟ']);
+  const totI    = fi(['สรุปรายจ่าย','รวมรายจ่าย','รายจ่ายรวม']);
+
+  $('ko-bill').textContent    = billI>=0   ? fmtShort(sh(billI))   : fmtShort(sh(1));
+  $('ko-wage').textContent    = wageI>=0   ? fmtShort(sh(wageI))   : fmtShort(sh(2));
+  $('ko-salary').textContent  = salaryI>=0 ? fmtShort(sh(salaryI)) : fmtShort(sh(3));
+  $('ko-water').textContent   = waterI>=0  ? fmtShort(sh(waterI))  : fmtShort(sh(4));
+  $('ko-electric').textContent= elecI>=0   ? fmtShort(sh(elecI))   : fmtShort(sh(5));
+  $('ko-total').textContent   = totI>=0    ? fmtShort(sh(totI))    : fmtShort(sh(headers.length-1));
 
   buildTable($('kbankOutHead'),$('kbankOutBody'),headers,data);
 }
@@ -740,8 +770,15 @@ function renderExpSum(rows) {
 function renderExpDetail(rows) {
   if(rows.length<2) return;
   expHeaders=rows[0];
-  expAllRows=rows.slice(1).filter(r=>r.some(c=>c.trim()!==''));
-  const days=[...new Set(expAllRows.map(r=>r[0]).filter(Boolean))].sort((a,b)=>parseNum(a)-parseNum(b));
+  // เก็บ row ที่มี col A (วันที่) หรือ col B (รายการ) อย่างน้อย 1 อย่าง
+  expAllRows=rows.slice(1).filter(r=>{
+    const day=(r[0]||'').trim();
+    const item=(r[1]||'').trim();
+    const price=(r[2]||'').trim();
+    // เอาเฉพาะ row ที่มีรายการหรือราคา ไม่เอา row ว่างสมบูรณ์
+    return item!==''||price!=='';
+  });
+  const days=[...new Set(expAllRows.map(r=>r[0]).filter(d=>d&&!isNaN(parseFloat(d))))].sort((a,b)=>parseNum(a)-parseNum(b));
   const sel=$('expDayFilter');
   sel.innerHTML='<option value="">ทุกวัน</option>';
   days.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent='วันที่ '+d;sel.appendChild(o);});
@@ -757,8 +794,8 @@ function filterExp() {
     if(s&&!r.join(' ').toLowerCase().includes(s)) return false;
     return true;
   });
-  buildTable(null,$('expBody'),expHeaders,filtered.slice(0,400));
-  $('expCount').textContent=`แสดง ${Math.min(filtered.length,400)} จาก ${filtered.length} รายการ`;
+  buildTable(null,$('expBody'),expHeaders,filtered.slice(0,500));
+  $('expCount').textContent=`แสดง ${Math.min(filtered.length,500)} จาก ${filtered.length} รายการ`;
 }
 
 // ══════════════════════════════════════════════
@@ -825,11 +862,15 @@ function buildTable(thead, tbody, headers, rows) {
   if(thead) thead.innerHTML=(headers||[]).map(h=>`<th>${h||''}</th>`).join('');
   if(!tbody||!rows) return;
   tbody.innerHTML=rows.map(row=>{
-    return '<tr>'+row.map((cell,i)=>{
+    // pad row ให้ยาวเท่า headers เสมอ
+    const padded = Array.from({length: (headers||row).length}, (_,i) => row[i]||'');
+    return '<tr>'+padded.map((cell,i)=>{
+      // col 0 = วันที่/label เสมอ ไม่ต้องแปลงเป็นตัวเลข
       if(i===0) return `<td>${cell}</td>`;
-      const n=parseNum(cell);
-      const isNum=cell!==''&&cell!=='0.00'&&cell!=='0'&&!isNaN(n)&&n!==0;
-      if(isNum) return `<td class="num ${n<0?'neg':'pos'}">${fmtFull(n)}</td>`;
+      const trimmed = cell.trim();
+      if(trimmed===''||trimmed==='0.00'||trimmed==='0') return `<td style="color:var(--muted2)">${trimmed||''}</td>`;
+      const n=parseNum(trimmed);
+      if(!isNaN(n)&&n!==0) return `<td class="num ${n<0?'neg':'pos'}">${fmtFull(n)}</td>`;
       return `<td>${cell}</td>`;
     }).join('')+'</tr>';
   }).join('');
