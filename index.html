@@ -707,6 +707,10 @@ async function fetchCSVWithTimeout(url, timeoutMs=8000) {
 }
 
 async function loadAll(silent=false) {
+  // Snapshot sheetId และ gids ตอน call เพื่อป้องกัน global เปลี่ยนระหว่าง async
+  const currentSheetId = MONTHS[currentMonthIdx].sheetId;
+  const currentGids    = MONTHS[currentMonthIdx].gids;
+
   if(!silent) {
     $('loadingOverlay').style.display='flex';
     $('loadBar').style.width='5%';
@@ -714,11 +718,14 @@ async function loadAll(silent=false) {
   }
   $('reloadBtn').innerHTML='<span style="display:inline-block;animation:spin .7s linear infinite">↻</span>';
 
-  const keys = Object.keys(GIDS);
+  const keys = Object.keys(currentGids);
 
-  // โหลดทุก tab พร้อมกัน
+  // โหลดทุก tab พร้อมกัน — ใช้ sheetId จาก snapshot ไม่ใช่ global
   const results = await Promise.all(
-    keys.map(key => fetchCSVWithTimeout(csvUrl(GIDS[key]), 10000))
+    keys.map(key => {
+      const url = `https://docs.google.com/spreadsheets/d/e/${currentSheetId}/pub?output=csv&gid=${currentGids[key]}`;
+      return fetchCSVWithTimeout(url, 10000);
+    })
   );
 
   const errors = [];
@@ -747,6 +754,9 @@ async function loadAll(silent=false) {
 }
 
 async function reloadAll() {
+  // sync globals before reload
+  SHEET_ID = MONTHS[currentMonthIdx].sheetId;
+  GIDS     = MONTHS[currentMonthIdx].gids;
   await loadAll(true);
 }
 
@@ -1207,11 +1217,13 @@ function buildMonthSelect() {
 async function switchMonth(idx) {
   currentMonthIdx = parseInt(idx);
   const m = MONTHS[currentMonthIdx];
+  // อัปเดต globals ก่อน
   SHEET_ID = m.sheetId;
   GIDS     = m.gids;
   // reset data + charts
   D = {}; charts = {};
   $('brandSub').textContent = 'รายรับรายจ่าย — ' + m.label;
+  console.log('Switching to:', m.label, 'sheetId:', m.sheetId);
   await loadAll(true);
 }
 
@@ -1544,31 +1556,12 @@ function switchSection(sec, btn) {
 // INIT
 // ══════════════════════════════════════════════
 window.onload = async () => {
+  // โหลด Config Sheet ก่อน — ดึงรายชื่อเดือนทั้งหมด
   $('loadTxt').textContent = 'กำลังโหลด config...';
-
-  // 1. โหลด Config Sheet — แหล่งความจริงหลัก
-  const configOk = await loadConfigSheet();
-
-  if(configOk) {
-    // Config โหลดสำเร็จ
-    // ล้าง localStorage เพื่อป้องกัน stale GIDs ทับข้อมูล config ใหม่
-    try {
-      const saved = localStorage.getItem(LS_KEY);
-      if(saved) {
-        const parsed = JSON.parse(saved);
-        const configLabels = MONTHS.map(m => m.label);
-        // เก็บเฉพาะเดือนที่เพิ่มผ่าน UI ที่ยังไม่มีใน config
-        const extras = parsed.filter(m => !configLabels.includes(m.label));
-        extras.forEach(m => MONTHS.push(m));
-        localStorage.setItem(LS_KEY, JSON.stringify(extras));
-      }
-    } catch(e) {}
-  } else {
-    // Config โหลดไม่ได้ — fallback: ใช้ localStorage + hardcode
-    loadSavedMonths();
-  }
-
-  // 2. ตั้งค่าเดือนแรกจาก MONTHS ที่โหลดมาได้
+  await loadConfigSheet();
+  // merge localStorage extras (ถ้ามี)
+  loadSavedMonths();
+  // set initial month
   SHEET_ID = MONTHS[0].sheetId;
   GIDS     = MONTHS[0].gids;
   buildMonthSelect();
