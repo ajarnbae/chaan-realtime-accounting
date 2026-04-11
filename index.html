@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บริษัทลูกจันทร์ — Dashboard 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d1117; --bg2:#161b22; --bg3:#1f2937; --bg4:#374151;
+  --border:rgba(255,255,255,0.07);
+  --text:#e6edf3; --muted:#8b949e; --muted2:#6e7681;
+  --green:#3fb950; --green-bg:rgba(63,185,80,0.1); --green-bd:rgba(63,185,80,0.25);
+  --red:#f85149; --red-bg:rgba(248,81,73,0.1);
+  --blue:#58a6ff; --blue-bg:rgba(88,166,255,0.1);
+  --yellow:#d29922; --yellow-bg:rgba(210,153,34,0.15);
+  --purple:#bc8cff; --purple-bg:rgba(188,140,255,0.1);
+  --orange:#ffa657; --orange-bg:rgba(255,166,87,0.1);
+  --pink:#ff7eb6; --pink-bg:rgba(255,126,182,0.1);
+  --teal:#39d0c8; --teal-bg:rgba(57,208,200,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+
+/* TOPBAR */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;gap:10px;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:10px;}
+.logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#238636,#3fb950);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;flex-shrink:0;}
+.brand-name{font-size:15px;font-weight:600;}
+.brand-sub{font-size:11px;color:var(--muted);}
+.topbar-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.pill{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+.pill-live{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.8s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.ts{font-size:11px;color:var(--muted2);}
+.btn-xs{padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Sarabun',sans-serif;font-size:12px;cursor:pointer;}
+.btn-xs:hover{color:var(--text);border-color:rgba(255,255,255,.2);}
+
+/* LOADING OVERLAY */
+#loadingOverlay{position:fixed;inset:0;background:rgba(13,17,23,.92);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.spinner-lg{width:40px;height:40px;border:3px solid rgba(255,255,255,.1);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{font-size:14px;color:var(--muted);}
+.load-progress{width:220px;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.load-bar{height:100%;background:var(--green);border-radius:2px;transition:width .4s;}
+
+/* SECTION SWITCHER */
+.section-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:0;}
+.sec-btn{padding:12px 20px;border:none;background:transparent;color:var(--muted);font-family:'Sarabun',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:.15s;}
+.sec-btn.active{color:var(--text);border-bottom-color:var(--green);}
+.sec-btn:hover:not(.active){color:var(--text);}
+
+/* WRAP */
+.wrap{max-width:1300px;margin:0 auto;padding:18px 20px 60px;}
+
+/* NAV TABS */
+.nav-tabs{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;margin-bottom:16px;flex-wrap:wrap;}
+.ntab{padding:7px 15px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-family:'Sarabun',sans-serif;font-size:13px;cursor:pointer;transition:.12s;white-space:nowrap;}
+.ntab.active{background:var(--bg3);color:var(--text);font-weight:500;}
+.ntab:hover:not(.active){color:var(--text);}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:16px;}
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden;}
+.mc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:12px 12px 0 0;}
+.mc.g::after{background:var(--green);}
+.mc.r::after{background:var(--red);}
+.mc.b::after{background:var(--blue);}
+.mc.y::after{background:var(--yellow);}
+.mc.p::after{background:var(--purple);}
+.mc.o::after{background:var(--orange);}
+.mc.pk::after{background:var(--pink);}
+.mc.t::after{background:var(--teal);}
+.mc-lbl{font-size:11px;color:var(--muted);margin-bottom:5px;line-height:1.4;}
+.mc-val{font-size:19px;font-weight:700;}
+.mc.g .mc-val{color:var(--green);}
+.mc.r .mc-val{color:var(--red);}
+.mc.b .mc-val{color:var(--blue);}
+.mc.y .mc-val{color:var(--yellow);}
+.mc.p .mc-val{color:var(--purple);}
+.mc.o .mc-val{color:var(--orange);}
+.mc.pk .mc-val{color:var(--pink);}
+.mc.t .mc-val{color:var(--teal);}
+.mc-sub{font-size:10px;color:var(--muted2);margin-top:3px;}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+.card-title{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.card-title::before{content:'';display:inline-block;width:3px;height:11px;border-radius:2px;background:currentColor;opacity:.6;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:680px){.grid2{grid-template-columns:1fr;}}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{text-align:left;padding:7px 10px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg3);}
+td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.num{text-align:right;font-variant-numeric:tabular-nums;}
+.pos{color:var(--green);}
+.neg{color:var(--red);}
+
+/* SECTION LABEL */
+.sec-label{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.05em;margin:14px 0 6px;}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;}
+.leg{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);}
+.leg-sq{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+
+/* INFO ROWS */
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);}
+.info-row:last-child{border-bottom:none;}
+.info-lbl{color:var(--muted);font-size:12px;}
+.info-val{font-size:13px;font-weight:600;}
+
+/* ERROR BANNER */
+.err-banner{background:var(--red-bg);border:1px solid rgba(248,81,73,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:12px;display:none;}
+
+/* FILTER */
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.fi{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:12px;flex:1;min-width:120px;}
+.fi:focus{outline:none;border-color:var(--blue);}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loadingOverlay">
+  <div class="spinner-lg"></div>
+  <div class="load-progress"><div class="load-bar" id="loadBar" style="width:0%"></div></div>
+  <div class="load-txt" id="loadTxt">กำลังโหลดข้อมูล...</div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">ล</div>
+    <div>
+      <div class="brand-name">บริษัทลูกจันทร์</div>
+      <div class="brand-sub">รายรับรายจ่าย — เมษายน 2026</div>
+    </div>
+  </div>
+  <div class="topbar-r">
+    <div class="pill pill-live"><div class="pill-dot"></div>Real-time</div>
+    <span class="ts" id="tsText">—</span>
+    <button class="btn-xs" onclick="reloadAll()" id="reloadBtn">↻ รีเฟรช</button>
+  </div>
+</div>
+
+<!-- SECTION SWITCHER -->
+<div class="section-bar">
+  <button class="sec-btn active" onclick="switchSection('restaurant',this)">🍜 ร้านอาหาร</button>
+  <button class="sec-btn" onclick="switchSection('wedding',this)">💍 Wedding</button>
+</div>
+
+<!-- ═══ RESTAURANT SECTION ═══ -->
+<div id="sec-restaurant" class="wrap">
+
+  <div id="errBanner" class="err-banner"></div>
+
+  <!-- NAV TABS -->
+  <div class="nav-tabs">
+    <button class="ntab active" onclick="showTab('summary','restaurant',this)">📊 ภาพรวม</button>
+    <button class="ntab" onclick="showTab('restaurant','restaurant',this)">🍜 รายได้-รายจ่ายรายวัน</button>
+    <button class="ntab" onclick="showTab('kbankIn','restaurant',this)">💰 กสิกร รายรับ</button>
+    <button class="ntab" onclick="showTab('kbankOut','restaurant',this)">💸 กสิกร รายจ่าย</button>
+    <button class="ntab" onclick="showTab('expDetail','restaurant',this)">🧾 ใบรายการ</button>
+    <button class="ntab" onclick="showTab('expSum','restaurant',this)">📋 สรุปค่าใช้จ่าย</button>
+  </div>
+
+  <!-- TAB: SUMMARY -->
+  <div id="rtab-summary">
+    <div class="sec-label">บัญชีกสิกร</div>
+    <div class="metrics">
+      <div class="mc b"><div class="mc-lbl">เงินยืมกรรมการ</div><div class="mc-val" id="s-capital">—</div></div>
+      <div class="mc g"><div class="mc-lbl">รายได้สุทธิบัญชีกสิกร</div><div class="mc-val" id="s-kincome">—</div></div>
+      <div class="mc r"><div class="mc-lbl">รายจ่ายสุทธิบัญชีกสิกร</div><div class="mc-val" id="s-kexpense">—</div></div>
+      <div class="mc y"><div class="mc-lbl">รายได้ - รายจ่าย</div><div class="mc-val" id="s-knet">—</div></div>
+      <div class="mc p"><div class="mc-lbl">ยอดคงเหลือบัญชีกสิกร</div><div class="mc-val" id="s-kbal">—</div></div>
+    </div>
+    <div class="sec-label">บัญชีแม่ (เงินสด)</div>
+    <div class="metrics">
+      <div class="mc b"><div class="mc-lbl">ยอดยกมาจากบัญชีแม่</div><div class="mc-val" id="s-mbal">—</div></div>
+      <div class="mc g"><div class="mc-lbl">รายได้สุทธิ</div><div class="mc-val" id="s-mincome">—</div></div>
+      <div class="mc r"><div class="mc-lbl">รายจ่ายสุทธิ</div><div class="mc-val" id="s-mexpense">—</div></div>
+      <div class="mc y"><div class="mc-lbl">กำไร / ขาดทุนสุทธิ</div><div class="mc-val" id="s-mnet">—</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title" style="color:var(--blue)">รายรับ vs รายจ่าย กสิกร</div>
+        <div class="legend" id="donutLeg"></div>
+        <div style="position:relative;height:200px;"><canvas id="donutC" role="img" aria-label="Income expense ratio"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--yellow)">กำไร/ขาดทุน รายวัน (ร้านอาหาร)</div>
+        <div style="position:relative;height:210px;"><canvas id="profitC" role="img" aria-label="Daily profit"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: RESTAURANT -->
+  <div id="rtab-restaurant" style="display:none;">
+    <div class="metrics">
+      <div class="mc g"><div class="mc-lbl">รายได้เงินสดรวม</div><div class="mc-val" id="r-cash">—</div></div>
+      <div class="mc b"><div class="mc-lbl">รายได้เงินโอนรวม</div><div class="mc-val" id="r-transfer">—</div></div>
+      <div class="mc p"><div class="mc-lbl">รายได้บัตรเครดิตรวม</div><div class="mc-val" id="r-credit">—</div></div>
+      <div class="mc o"><div class="mc-lbl">รายได้ทั้งหมด</div><div class="mc-val" id="r-total">—</div></div>
+      <div class="mc r"><div class="mc-lbl">รายจ่ายทั้งหมด</div><div class="mc-val" id="r-expense">—</div></div>
+      <div class="mc y"><div class="mc-lbl">กำไร / ขาดทุน</div><div class="mc-val" id="r-profit">—</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title" style="color:var(--purple)">รายได้แยกช่องทาง</div>
+        <div style="position:relative;height:210px;"><canvas id="channelC" role="img" aria-label="Revenue by channel"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--green)">รายรับ-รายจ่าย รายวัน</div>
+        <div style="position:relative;height:210px;"><canvas id="dailyC" role="img" aria-label="Daily income expense"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--blue)">ตารางรายได้-รายจ่ายรายวัน</div>
+      <div class="tbl-wrap"><table><thead><tr id="restHead"></tr></thead><tbody id="restBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- TAB: KBANK IN -->
+  <div id="rtab-kbankIn" style="display:none;">
+    <div class="metrics">
+      <div class="mc p"><div class="mc-lbl">บัตรเครดิต (หลังหักค่าธรรมเนียม)</div><div class="mc-val" id="ki-credit">—</div></div>
+      <div class="mc b"><div class="mc-lbl">เงินโอน / QR</div><div class="mc-val" id="ki-transfer">—</div></div>
+      <div class="mc o"><div class="mc-lbl">Line Man</div><div class="mc-val" id="ki-lineman">—</div></div>
+      <div class="mc t"><div class="mc-lbl">Grab</div><div class="mc-val" id="ki-grab">—</div></div>
+      <div class="mc pk"><div class="mc-lbl">กำไร Wedding</div><div class="mc-val" id="ki-wedding">—</div></div>
+      <div class="mc g"><div class="mc-lbl">รวมเงินเข้าจริง</div><div class="mc-val" id="ki-total">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--green)">รายละเอียดเงินเข้าบัญชีกสิกร รายวัน</div>
+      <div class="tbl-wrap"><table><thead><tr id="kbankInHead"></tr></thead><tbody id="kbankInBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- TAB: KBANK OUT -->
+  <div id="rtab-kbankOut" style="display:none;">
+    <div class="metrics">
+      <div class="mc r"><div class="mc-lbl">รายจ่ายใบรายการ</div><div class="mc-val" id="ko-bill">—</div></div>
+      <div class="mc r"><div class="mc-lbl">ค่าจัดจ้าง</div><div class="mc-val" id="ko-wage">—</div></div>
+      <div class="mc r"><div class="mc-lbl">เงินเดือน</div><div class="mc-val" id="ko-salary">—</div></div>
+      <div class="mc r"><div class="mc-lbl">ค่าน้ำ</div><div class="mc-val" id="ko-water">—</div></div>
+      <div class="mc r"><div class="mc-lbl">ค่าไฟ</div><div class="mc-val" id="ko-electric">—</div></div>
+      <div class="mc r"><div class="mc-lbl">รายจ่ายรวม</div><div class="mc-val" id="ko-total">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--red)">รายละเอียดรายจ่ายบัญชีกสิกร รายวัน</div>
+      <div class="tbl-wrap"><table><thead><tr id="kbankOutHead"></tr></thead><tbody id="kbankOutBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- TAB: EXP DETAIL -->
+  <div id="rtab-expDetail" style="display:none;">
+    <div class="filter-row">
+      <input class="fi" id="expSearch" type="text" placeholder="ค้นหารายการ..." oninput="filterExp()">
+      <select class="fi" id="expDayFilter" onchange="filterExp()" style="flex:0;min-width:110px;"></select>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--orange)">รายละเอียดใบรายการทั้งหมด</div>
+      <div class="tbl-wrap"><table><thead><tr id="expHead"></tr></thead><tbody id="expBody"></tbody></table></div>
+      <div id="expCount" style="font-size:11px;color:var(--muted2);margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <!-- TAB: EXP SUMMARY -->
+  <div id="rtab-expSum" style="display:none;">
+    <div class="metrics">
+      <div class="mc r"><div class="mc-lbl">ค่าของสดรวม</div><div class="mc-val" id="es-fresh">—</div></div>
+      <div class="mc o"><div class="mc-lbl">ค่าใช้จ่ายอื่นๆ รวม</div><div class="mc-val" id="es-other">—</div></div>
+      <div class="mc r"><div class="mc-lbl">รวมทั้งหมด</div><div class="mc-val" id="es-total">—</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title" style="color:var(--red)">ของสด vs ค่าใช้จ่ายอื่นๆ</div>
+        <div style="position:relative;height:200px;"><canvas id="expPieC" role="img" aria-label="Expense breakdown"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--orange)">ค่าใช้จ่ายรายวัน</div>
+        <div style="position:relative;height:200px;"><canvas id="expBarC" role="img" aria-label="Daily expense"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--orange)">ตารางสรุปค่าใช้จ่ายใบรายการ</div>
+      <div class="tbl-wrap"><table><thead><tr id="esSumHead"></tr></thead><tbody id="esSumBody"></tbody></table></div>
+    </div>
+  </div>
+
+</div><!-- /sec-restaurant -->
+
+<!-- ═══ WEDDING SECTION ═══ -->
+<div id="sec-wedding" class="wrap" style="display:none;">
+  <div class="nav-tabs">
+    <button class="ntab active" onclick="showTab('weddingSummary','wedding',this)">💍 สรุป Wedding</button>
+    <button class="ntab" onclick="showTab('weddingIn','wedding',this)">💰 รายได้ Wedding</button>
+    <button class="ntab" onclick="showTab('weddingOut','wedding',this)">💸 รายจ่าย Wedding</button>
+  </div>
+
+  <!-- TAB: WEDDING SUMMARY -->
+  <div id="wtab-weddingSummary">
+    <div class="metrics">
+      <div class="mc pk"><div class="mc-lbl">ยอดยกมา Wedding</div><div class="mc-val" id="w-carry">—</div></div>
+      <div class="mc g"><div class="mc-lbl">รายได้ Wedding</div><div class="mc-val" id="w-income">—</div></div>
+      <div class="mc r"><div class="mc-lbl">รายจ่าย Wedding</div><div class="mc-val" id="w-expense">—</div></div>
+      <div class="mc b"><div class="mc-lbl">ยอดเงินมัดจำ</div><div class="mc-val" id="w-deposit">—</div></div>
+      <div class="mc o"><div class="mc-lbl">ยอดเงินที่ต้องโอนไปกสิกร</div><div class="mc-val" id="w-transfer">—</div></div>
+      <div class="mc y"><div class="mc-lbl">ยอดคงเหลือ</div><div class="mc-val" id="w-balance">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--pink)">สรุป Wedding</div>
+      <div id="wSummaryRows"></div>
+    </div>
+    <div class="grid2" style="margin-top:12px;">
+      <div class="card">
+        <div class="card-title" style="color:var(--pink)">รายรับ vs รายจ่าย Wedding</div>
+        <div style="position:relative;height:200px;"><canvas id="wDonutC" role="img" aria-label="Wedding income expense"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--pink)">หมายเหตุ</div>
+        <div style="padding:12px 0;font-size:13px;color:var(--muted);line-height:1.8;">
+          รายได้จาก Wedding จะถูกโอนเข้าบัญชีกสิกรหลังหักค่าใช้จ่าย<br>
+          ยอดนี้สะท้อนอยู่ใน <strong style="color:var(--pink)">กำไร Wedding</strong> ในหน้า กสิกร รายรับ
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: WEDDING IN -->
+  <div id="wtab-weddingIn" style="display:none;">
+    <div class="card">
+      <div class="card-title" style="color:var(--green)">รายได้ Wedding รายวัน</div>
+      <div class="tbl-wrap"><table><thead><tr id="wInHead"></tr></thead><tbody id="wInBody"></tbody></table></div>
+      <div id="wInEmpty" style="text-align:center;padding:30px;color:var(--muted);font-size:13px;display:none;">ยังไม่มีข้อมูลรายได้ Wedding ในเดือนนี้</div>
+    </div>
+  </div>
+
+  <!-- TAB: WEDDING OUT -->
+  <div id="wtab-weddingOut" style="display:none;">
+    <div class="card">
+      <div class="card-title" style="color:var(--red)">รายจ่าย Wedding รายวัน</div>
+      <div class="tbl-wrap"><table><thead><tr id="wOutHead"></tr></thead><tbody id="wOutBody"></tbody></table></div>
+      <div id="wOutEmpty" style="text-align:center;padding:30px;color:var(--muted);font-size:13px;display:none;">ยังไม่มีข้อมูลรายจ่าย Wedding ในเดือนนี้</div>
+    </div>
+  </div>
+
+</div><!-- /sec-wedding -->
+
+<script>
+// ══════════════════════════════════════════════
+// HARDCODED CONFIG — GIDs ของบริษัทลูกจันทร์
+// ══════════════════════════════════════════════
+const SHEET_ID = '2PACX-1vQlrlkOZQrT6rn8uaC3cPzqA52lRkzBkDszAkhaS4hk-LzDdFYNDzeQWOoPX0HpQnXZtin3QS00a1pG';
+const GIDS = {
+  summary:     '239909121',
+  restaurant:  '196080681',
+  kbankIn:     '1961079333',
+  kbankOut:    '881911619',
+  expDetail:   '1607322378',
+  expSum:      '1477691262',
+  weddingSum:  '1098787073',
+  weddingIn:   '1980572075',
+  weddingOut:  '424100009',
+};
+const AUTO_REFRESH = 60; // วินาที
+
+// ══════════════════════════════════════════════
+// CORS PROXIES
+// ══════════════════════════════════════════════
+const PROXIES = [
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+];
+let bestProxy = -1; // -1 = direct
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+let D = {}; // raw parsed data keyed by GIDS key
+let charts = {};
+let expAllRows = [], expHeaders = [];
+let refreshTimer = null;
+
+// ══════════════════════════════════════════════
+// FORMAT
+// ══════════════════════════════════════════════
+const fmtFull = n => {
+  if(n === null || n === undefined || isNaN(n)) return '—';
+  return (n < 0 ? '-' : '') + '฿' + Math.abs(n).toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2});
+};
+const fmtShort = n => {
+  if(isNaN(n)) return '—';
+  const a = Math.abs(n);
+  const s = a >= 1000000 ? (a/1000000).toFixed(2)+'M' : a >= 1000 ? (a/1000).toFixed(1)+'K' : a.toFixed(0);
+  return (n<0?'-':'')+'฿'+s;
+};
+const parseNum = s => parseFloat((s||'').toString().replace(/[^0-9.-]/g,'')) || 0;
+
+// ══════════════════════════════════════════════
+// FETCH CSV
+// ══════════════════════════════════════════════
+function csvUrl(gid) {
+  return `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv&gid=${gid}`;
+}
+
+async function fetchCSV(url) {
+  // Try direct fetch first
+  try {
+    const r = await fetch(url, {cache:'no-store'});
+    if(r.ok) {
+      const t = await r.text();
+      if(t.length > 10 && !t.startsWith('<')) { bestProxy=-1; return t; }
+    }
+  } catch(e){}
+  // Try proxies
+  for(let i=0;i<PROXIES.length;i++) {
+    try {
+      const r = await fetch(PROXIES[i](url), {cache:'no-store'});
+      if(r.ok) {
+        const t = await r.text();
+        if(t.length > 10 && !t.startsWith('<!')) { bestProxy=i; return t; }
+      }
+    } catch(e){}
+  }
+  return null;
+}
+
+function parseCSV(text) {
+  if(!text) return [];
+  return text.trim().split('\n').map(line => {
+    const res=[]; let cur='', inQ=false;
+    for(let i=0;i<line.length;i++) {
+      const c=line[i];
+      if(c==='"'){inQ=!inQ;}
+      else if(c===','&&!inQ){res.push(cur.trim());cur='';}
+      else cur+=c;
+    }
+    res.push(cur.trim()); return res;
+  });
+}
+
+// ══════════════════════════════════════════════
+// LOAD ALL
+// ══════════════════════════════════════════════
+async function fetchCSVWithTimeout(url, timeoutMs=8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), timeoutMs);
+  // Try direct
+  try {
+    const r = await fetch(url, {cache:'no-store', signal:controller.signal});
+    clearTimeout(timer);
+    if(r.ok){ const t=await r.text(); if(t.length>10&&!t.startsWith('<')) return t; }
+  } catch(e){}
+  // Try proxies with their own timeout
+  for(let i=0;i<PROXIES.length;i++){
+    const ctrl2 = new AbortController();
+    const t2 = setTimeout(()=>ctrl2.abort(), timeoutMs);
+    try{
+      const r=await fetch(PROXIES[i](url),{cache:'no-store',signal:ctrl2.signal});
+      clearTimeout(t2);
+      if(r.ok){ const t=await r.text(); if(t.length>10&&!t.startsWith('<!')) return t; }
+    } catch(e){ clearTimeout(t2); }
+  }
+  return null;
+}
+
+async function loadAll(silent=false) {
+  if(!silent) {
+    $('loadingOverlay').style.display='flex';
+    $('loadBar').style.width='5%';
+    $('loadTxt').textContent='กำลังโหลดข้อมูลทั้งหมดพร้อมกัน...';
+  }
+  $('reloadBtn').innerHTML='<span style="display:inline-block;animation:spin .7s linear infinite">↻</span>';
+
+  const keys = Object.keys(GIDS);
+
+  // โหลดทุก tab พร้อมกัน
+  const results = await Promise.all(
+    keys.map(key => fetchCSVWithTimeout(csvUrl(GIDS[key]), 10000))
+  );
+
+  const errors = [];
+  keys.forEach((key, i) => {
+    D[key] = results[i] ? parseCSV(results[i]) : null;
+    if(!results[i]) errors.push(key);
+  });
+
+  $('loadBar').style.width='100%';
+  $('loadTxt').textContent='เสร็จแล้ว!';
+  $('reloadBtn').innerHTML='↻ รีเฟรช';
+  $('tsText').textContent='อัปเดต: '+new Date().toLocaleTimeString('th-TH');
+
+  setTimeout(()=>{ $('loadingOverlay').style.display='none'; }, 400);
+
+  if(errors.length) {
+    const b=$('errBanner');
+    b.style.display='block';
+    b.textContent='⚠ โหลดบาง Sheet ไม่ได้: '+errors.join(', ')+' — ข้อมูลอื่นยังแสดงได้ปกติ';
+  } else {
+    $('errBanner').style.display='none';
+  }
+
+  renderAll();
+  if(!refreshTimer) scheduleRefresh();
+}
+
+async function reloadAll() {
+  await loadAll(true);
+}
+
+function scheduleRefresh() {
+  refreshTimer = setInterval(reloadAll, AUTO_REFRESH * 1000);
+}
+
+// ══════════════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════════════
+function renderAll() {
+  if(D.summary)    renderSummary(D.summary);
+  if(D.restaurant) renderRestaurant(D.restaurant);
+  if(D.kbankIn)    renderKbankIn(D.kbankIn);
+  if(D.kbankOut)   renderKbankOut(D.kbankOut);
+  if(D.expDetail)  renderExpDetail(D.expDetail);
+  if(D.expSum)     renderExpSum(D.expSum);
+  if(D.weddingSum) renderWeddingSummary(D.weddingSum);
+  if(D.weddingIn)  renderWeddingIn(D.weddingIn);
+  if(D.weddingOut) renderWeddingOut(D.weddingOut);
+}
+
+// ══════════════════════════════════════════════
+// RENDER: SUMMARY
+// ══════════════════════════════════════════════
+function renderSummary(rows) {
+  const get = i => parseNum(rows[i]?.[1]);
+  $('s-capital').textContent  = fmtShort(get(0));
+  $('s-kincome').textContent  = fmtShort(get(2));
+  $('s-kexpense').textContent = fmtShort(get(3));
+  const knet = get(4);
+  $('s-knet').textContent = fmtShort(knet);
+  $('s-knet').style.color = knet>=0?'var(--green)':'var(--red)';
+  $('s-kbal').textContent  = fmtShort(get(5));
+  $('s-mbal').textContent  = fmtShort(get(7));
+  $('s-mincome').textContent  = fmtShort(get(9));
+  $('s-mexpense').textContent = fmtShort(get(10));
+  const mnet = get(11);
+  $('s-mnet').textContent = fmtShort(mnet);
+  $('s-mnet').style.color = mnet>=0?'var(--green)':'var(--red)';
+
+  // Donut
+  const inc=get(2), exp=get(3);
+  const ip = inc+exp>0?Math.round(inc/(inc+exp)*100):0;
+  $('donutLeg').innerHTML=
+    `<div class="leg"><div class="leg-sq" style="background:var(--green)"></div>รายรับ ${fmtShort(inc)} (${ip}%)</div>
+     <div class="leg"><div class="leg-sq" style="background:var(--red)"></div>รายจ่าย ${fmtShort(exp)} (${100-ip}%)</div>`;
+  if(charts.donut) charts.donut.destroy();
+  charts.donut = new Chart($('donutC'), {
+    type:'doughnut',
+    data:{labels:['รายรับ','รายจ่าย'],datasets:[{data:[inc,exp],backgroundColor:['#3fb950','#f85149'],borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmtFull(ctx.raw)}}}}
+  });
+}
+
+// ══════════════════════════════════════════════
+// RENDER: RESTAURANT
+// ══════════════════════════════════════════════
+function renderRestaurant(rows) {
+  if(rows.length<2) return;
+  const headers=rows[0];
+  const data=rows.slice(1).filter(r=>r[0]&&!isNaN(parseFloat(r[0])));
+  const fi=(kws)=>headers.findIndex(h=>kws.some(k=>(h||'').includes(k)));
+
+  const cashI=fi(['เงินสด']), transI=fi(['เงินโอน','โอน']), credI=fi(['บัตรเครดิต']),
+        totI=fi(['รายได้ทั้งหมด','เงินเข้าทั้งหมด']), expI=fi(['รายจ่ายทั้งหมด']), profI=fi(['กำไร']);
+
+  let totIncome=0,totExpense=0;
+  const ch=[0,0,0];
+  const days=[],incA=[],expA=[],profA=[];
+
+  data.forEach(r=>{
+    const cash=parseNum(r[cashI]),trans=parseNum(r[transI]),cred=parseNum(r[credI]);
+    const tot=totI>=0?parseNum(r[totI]):cash+trans+cred;
+    const exp=expI>=0?parseNum(r[expI]):0;
+    const prof=profI>=0?parseNum(r[profI]):tot-exp;
+    totIncome+=tot; totExpense+=exp;
+    ch[0]+=cash; ch[1]+=trans; ch[2]+=cred;
+    days.push(''+r[0]); incA.push(tot); expA.push(exp); profA.push(prof);
+  });
+
+  $('r-cash').textContent=fmtShort(ch[0]);
+  $('r-transfer').textContent=fmtShort(ch[1]);
+  $('r-credit').textContent=fmtShort(ch[2]);
+  $('r-total').textContent=fmtShort(totIncome);
+  $('r-expense').textContent=fmtShort(totExpense);
+  const profit=totIncome-totExpense;
+  $('r-profit').textContent=fmtShort(profit);
+  $('r-profit').style.color=profit>=0?'var(--green)':'var(--red)';
+
+  // Channel donut
+  if(charts.channel) charts.channel.destroy();
+  charts.channel=new Chart($('channelC'),{
+    type:'doughnut',
+    data:{labels:['เงินสด','เงินโอน','บัตรเครดิต'],
+      datasets:[{data:ch,backgroundColor:['#3fb950','#58a6ff','#bc8cff'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{position:'bottom',labels:{color:'#8b949e',font:{size:11},boxWidth:10}},
+        tooltip:{callbacks:{label:ctx=>' '+fmtFull(ctx.raw)}}}}
+  });
+
+  // Daily bar
+  if(charts.daily) charts.daily.destroy();
+  charts.daily=new Chart($('dailyC'),{
+    type:'bar',
+    data:{labels:days.map(d=>'วัน '+d),
+      datasets:[
+        {label:'รายรับ',data:incA,backgroundColor:'rgba(63,185,80,.7)',borderRadius:3},
+        {label:'รายจ่าย',data:expA,backgroundColor:'rgba(248,81,73,.7)',borderRadius:3},
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8b949e',font:{size:10},boxWidth:9}},
+        tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmtFull(ctx.raw)}}},
+      scales:{x:{ticks:{color:'#6e7681',font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:'#6e7681',callback:v=>'฿'+(v/1000).toFixed(0)+'K',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}}}}
+  });
+
+  // Profit chart on summary tab
+  if(charts.profit) charts.profit.destroy();
+  charts.profit=new Chart($('profitC'),{
+    type:'bar',
+    data:{labels:days.slice(0,12).map(d=>'วัน '+d),
+      datasets:[{label:'กำไร/ขาดทุน',data:profA.slice(0,12),
+        backgroundColor:profA.slice(0,12).map(v=>v>=0?'rgba(63,185,80,.75)':'rgba(248,81,73,.75)'),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmtFull(ctx.raw)}}},
+      scales:{x:{ticks:{color:'#6e7681',font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:'#6e7681',callback:v=>'฿'+(v/1000).toFixed(0)+'K',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}}}}
+  });
+
+  buildTable($('restHead'),$('restBody'),headers,data);
+}
+
+// ══════════════════════════════════════════════
+// RENDER: KBANK IN
+// ══════════════════════════════════════════════
+function renderKbankIn(rows) {
+  if(rows.length<2) return;
+  const headers=rows[0];
+  const data=rows.slice(1).filter(r=>r[0]&&!isNaN(parseFloat(r[0])));
+  const sumRow=rows.find(r=>(r[0]||'').includes('สรุป'));
+  const si=i=>parseNum(sumRow?.[i]);
+  const fi=(kws)=>headers.findIndex(h=>kws.some(k=>(h||'').toLowerCase().includes(k.toLowerCase())));
+
+  const creditI=fi(['บัตรเครดิต','credit']),transI=fi(['เงินโอน','โอน']),
+        lineI=fi(['line man','lineman','ไลน์']),grabI=fi(['grab']),
+        weddI=fi(['wedding','เวดดิ้ง','แต่ง']),totI=fi(['รวม','สรุปรายได้','total']);
+
+  $('ki-credit').textContent  = creditI>=0?fmtShort(si(creditI)):'—';
+  $('ki-transfer').textContent= transI>=0?fmtShort(si(transI)):'—';
+  $('ki-lineman').textContent  = lineI>=0?fmtShort(si(lineI)):'—';
+  $('ki-grab').textContent    = grabI>=0?fmtShort(si(grabI)):'—';
+  $('ki-wedding').textContent  = weddI>=0?fmtShort(si(weddI)):'—';
+  $('ki-total').textContent   = totI>=0?fmtShort(si(totI)):fmtShort(si(headers.length-1));
+
+  buildTable($('kbankInHead'),$('kbankInBody'),headers,data);
+}
+
+// ══════════════════════════════════════════════
+// RENDER: KBANK OUT
+// ══════════════════════════════════════════════
+function renderKbankOut(rows) {
+  if(rows.length<2) return;
+  const headers=rows[0];
+  const data=rows.slice(1).filter(r=>r[0]&&!isNaN(parseFloat(r[0])));
+  const sumRow=rows.find(r=>(r[0]||'').includes('สรุป'));
+  const si=i=>parseNum(sumRow?.[i]);
+  const fi=(kws)=>headers.findIndex(h=>kws.some(k=>(h||'').includes(k)));
+
+  $('ko-bill').textContent    = fmtShort(si(1));
+  $('ko-wage').textContent    = fmtShort(si(2));
+  $('ko-salary').textContent  = fmtShort(si(3));
+  $('ko-water').textContent   = fmtShort(si(4));
+  $('ko-electric').textContent= fmtShort(si(5));
+  $('ko-total').textContent   = fmtShort(si(headers.length-1));
+
+  buildTable($('kbankOutHead'),$('kbankOutBody'),headers,data);
+}
+
+// ══════════════════════════════════════════════
+// RENDER: EXP SUMMARY
+// ══════════════════════════════════════════════
+function renderExpSum(rows) {
+  if(rows.length<2) return;
+  const headers=rows[0];
+  const data=rows.slice(1).filter(r=>r[0]&&!isNaN(parseFloat(r[0])));
+  const sumRow=rows.find(r=>(r[0]||'').includes('สรุป'));
+  const si=i=>parseNum(sumRow?.[i]);
+
+  const fresh=si(1),other=si(2),total=si(3)||si(headers.length-1);
+  $('es-fresh').textContent=fmtShort(fresh);
+  $('es-other').textContent=fmtShort(other);
+  $('es-total').textContent=fmtShort(total);
+
+  if(charts.expPie) charts.expPie.destroy();
+  charts.expPie=new Chart($('expPieC'),{
+    type:'doughnut',
+    data:{labels:['ของสด','อื่นๆ'],datasets:[{data:[fresh,other],backgroundColor:['#f85149','#ffa657'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{position:'bottom',labels:{color:'#8b949e',font:{size:11},boxWidth:10}},
+        tooltip:{callbacks:{label:ctx=>' '+fmtFull(ctx.raw)}}}}
+  });
+
+  const totals=data.map(r=>parseNum(r[3])||parseNum(r[headers.length-1]));
+  if(charts.expBar) charts.expBar.destroy();
+  charts.expBar=new Chart($('expBarC'),{
+    type:'bar',
+    data:{labels:data.map(r=>'วัน '+r[0]),
+      datasets:[{label:'ค่าใช้จ่าย',data:totals,backgroundColor:'rgba(248,81,73,.7)',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmtFull(ctx.raw)}}},
+      scales:{x:{ticks:{color:'#6e7681',font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:'#6e7681',callback:v=>'฿'+(v/1000).toFixed(0)+'K',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}}}}
+  });
+
+  buildTable($('esSumHead'),$('esSumBody'),headers,data);
+}
+
+// ══════════════════════════════════════════════
+// RENDER: EXP DETAIL
+// ══════════════════════════════════════════════
+function renderExpDetail(rows) {
+  if(rows.length<2) return;
+  expHeaders=rows[0];
+  expAllRows=rows.slice(1).filter(r=>r.some(c=>c.trim()!==''));
+  const days=[...new Set(expAllRows.map(r=>r[0]).filter(Boolean))].sort((a,b)=>parseNum(a)-parseNum(b));
+  const sel=$('expDayFilter');
+  sel.innerHTML='<option value="">ทุกวัน</option>';
+  days.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent='วันที่ '+d;sel.appendChild(o);});
+  buildTable($('expHead'),null,expHeaders,null);
+  filterExp();
+}
+
+function filterExp() {
+  const s=($('expSearch').value||'').toLowerCase();
+  const d=$('expDayFilter').value;
+  const filtered=expAllRows.filter(r=>{
+    if(d&&r[0]!==d) return false;
+    if(s&&!r.join(' ').toLowerCase().includes(s)) return false;
+    return true;
+  });
+  buildTable(null,$('expBody'),expHeaders,filtered.slice(0,400));
+  $('expCount').textContent=`แสดง ${Math.min(filtered.length,400)} จาก ${filtered.length} รายการ`;
+}
+
+// ══════════════════════════════════════════════
+// RENDER: WEDDING SUMMARY
+// ══════════════════════════════════════════════
+function renderWeddingSummary(rows) {
+  const get=(i,col=1)=>parseNum(rows[i]?.[col]);
+  // โครงสร้าง: ยอดยกมา, รายได้, รายจ่าย, ยอดเงินมัดจำ, ยอดเงินที่ต้องโอน, ยอดคงเหลือ
+  const labels=rows.map(r=>r[0]||'');
+  const vals=rows.map(r=>parseNum(r[1]));
+
+  $('w-carry').textContent   = fmtShort(vals[0]||0);
+  $('w-income').textContent  = fmtShort(vals[1]||0);
+  $('w-expense').textContent = fmtShort(vals[2]||0);
+  $('w-deposit').textContent = fmtShort(vals[3]||0);
+  $('w-transfer').textContent= fmtShort(vals[4]||0);
+  $('w-balance').textContent = fmtShort(vals[5]||0);
+
+  // Info rows
+  const wrap=$('wSummaryRows');
+  wrap.innerHTML=rows.filter(r=>r[0]).map(r=>{
+    const v=parseNum(r[1]);
+    const col=v>0?'var(--green)':v<0?'var(--red)':'var(--muted)';
+    return `<div class="info-row"><span class="info-lbl">${r[0]}</span><span class="info-val" style="color:${col}">${r[1]||'—'}</span></div>`;
+  }).join('');
+
+  // Wedding donut
+  const inc=vals[1]||0, exp=vals[2]||0;
+  if(inc+exp>0) {
+    if(charts.wDonut) charts.wDonut.destroy();
+    charts.wDonut=new Chart($('wDonutC'),{
+      type:'doughnut',
+      data:{labels:['รายรับ','รายจ่าย'],datasets:[{data:[inc,exp],backgroundColor:['#ff7eb6','#f85149'],borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+        plugins:{legend:{position:'bottom',labels:{color:'#8b949e',font:{size:11},boxWidth:10}},
+          tooltip:{callbacks:{label:ctx=>' '+fmtFull(ctx.raw)}}}}
+    });
+  }
+}
+
+// ══════════════════════════════════════════════
+// RENDER: WEDDING IN / OUT
+// ══════════════════════════════════════════════
+function renderWeddingIn(rows) {
+  if(rows.length<2){$('wInEmpty').style.display='block';return;}
+  const headers=rows[0];
+  const data=rows.slice(1).filter(r=>r.some(c=>c.trim()&&c!=='0'));
+  if(!data.length){$('wInEmpty').style.display='block';return;}
+  buildTable($('wInHead'),$('wInBody'),headers,data);
+}
+
+function renderWeddingOut(rows) {
+  if(rows.length<2){$('wOutEmpty').style.display='block';return;}
+  const headers=rows[0];
+  const data=rows.slice(1).filter(r=>r.some(c=>c.trim()&&c!=='0'));
+  if(!data.length){$('wOutEmpty').style.display='block';return;}
+  buildTable($('wOutHead'),$('wOutBody'),headers,data);
+}
+
+// ══════════════════════════════════════════════
+// BUILD TABLE
+// ══════════════════════════════════════════════
+function buildTable(thead, tbody, headers, rows) {
+  if(thead) thead.innerHTML=(headers||[]).map(h=>`<th>${h||''}</th>`).join('');
+  if(!tbody||!rows) return;
+  tbody.innerHTML=rows.map(row=>{
+    return '<tr>'+row.map((cell,i)=>{
+      if(i===0) return `<td>${cell}</td>`;
+      const n=parseNum(cell);
+      const isNum=cell!==''&&cell!=='0.00'&&cell!=='0'&&!isNaN(n)&&n!==0;
+      if(isNum) return `<td class="num ${n<0?'neg':'pos'}">${fmtFull(n)}</td>`;
+      return `<td>${cell}</td>`;
+    }).join('')+'</tr>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// TAB / SECTION SWITCHING
+// ══════════════════════════════════════════════
+const R_TABS=['summary','restaurant','kbankIn','kbankOut','expDetail','expSum'];
+const W_TABS=['weddingSummary','weddingIn','weddingOut'];
+
+function showTab(name, section, btn) {
+  const tabs = section==='restaurant'?R_TABS:W_TABS;
+  tabs.forEach(t=>{ const el=$(`${section==='restaurant'?'r':'w'}tab-${t}`); if(el) el.style.display='none'; });
+  btn.closest('.nav-tabs').querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));
+  const target = $(`${section==='restaurant'?'r':'w'}tab-${name}`);
+  if(target) target.style.display='block';
+  btn.classList.add('active');
+}
+
+function switchSection(sec, btn) {
+  $('sec-restaurant').style.display = sec==='restaurant'?'block':'none';
+  $('sec-wedding').style.display    = sec==='wedding'?'block':'none';
+  document.querySelectorAll('.sec-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+window.onload = () => loadAll();
+</script>
+</body>
+</html>
