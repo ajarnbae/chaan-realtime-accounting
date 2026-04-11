@@ -770,32 +770,66 @@ function renderExpSum(rows) {
 function renderExpDetail(rows) {
   if(rows.length<2) return;
   expHeaders=rows[0];
-  // เก็บ row ที่มี col A (วันที่) หรือ col B (รายการ) อย่างน้อย 1 อย่าง
-  expAllRows=rows.slice(1).filter(r=>{
-    const day=(r[0]||'').trim();
-    const item=(r[1]||'').trim();
-    const price=(r[2]||'').trim();
-    // เอาเฉพาะ row ที่มีรายการหรือราคา ไม่เอา row ว่างสมบูรณ์
-    return item!==''||price!=='';
+
+  // ดึง raw ทุก row ยกเว้น header และ row ที่ว่างสมบูรณ์
+  // ไม่ filter ด้วย "มีรายการ" เพราะบางแถวชื่อรายการอยู่ใน col B แต่ col B อาจเป็น "1", "2" ฯลฯ
+  expAllRows = rows.slice(1).filter(r => {
+    // เอา row ที่มีข้อมูลอย่างน้อย 1 col ที่ไม่ใช่ 0 หรือว่าง
+    return r.some(c => c.trim() !== '' && c.trim() !== '0' && c.trim() !== '0.00');
   });
-  const days=[...new Set(expAllRows.map(r=>r[0]).filter(d=>d&&!isNaN(parseFloat(d))))].sort((a,b)=>parseNum(a)-parseNum(b));
-  const sel=$('expDayFilter');
-  sel.innerHTML='<option value="">ทุกวัน</option>';
-  days.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent='วันที่ '+d;sel.appendChild(o);});
-  buildTable($('expHead'),null,expHeaders,null);
-  filterExp();
+
+  // หา day list จาก col 0
+  const days = [...new Set(
+    expAllRows.map(r => r[0]).filter(d => d && !isNaN(parseFloat(d)))
+  )].sort((a,b) => parseNum(a)-parseNum(b));
+
+  const sel = $('expDayFilter');
+  sel.innerHTML = '<option value="">ทุกวัน (' + expAllRows.length + ' รายการ)</option>';
+  days.forEach(d => {
+    const cnt = expAllRows.filter(r=>r[0]===d).length;
+    const o = document.createElement('option');
+    o.value = d;
+    o.textContent = 'วันที่ ' + d + ' (' + cnt + ' รายการ)';
+    sel.appendChild(o);
+  });
+
+  buildExpTable(expAllRows);
 }
 
 function filterExp() {
-  const s=($('expSearch').value||'').toLowerCase();
-  const d=$('expDayFilter').value;
-  const filtered=expAllRows.filter(r=>{
-    if(d&&r[0]!==d) return false;
-    if(s&&!r.join(' ').toLowerCase().includes(s)) return false;
+  const s = ($('expSearch').value||'').toLowerCase();
+  const d = $('expDayFilter').value;
+  const filtered = expAllRows.filter(r => {
+    if(d && r[0] !== d) return false;
+    if(s && !r.join(' ').toLowerCase().includes(s)) return false;
     return true;
   });
-  buildTable(null,$('expBody'),expHeaders,filtered.slice(0,500));
-  $('expCount').textContent=`แสดง ${Math.min(filtered.length,500)} จาก ${filtered.length} รายการ`;
+  buildExpTable(filtered);
+}
+
+function buildExpTable(rows) {
+  // สร้าง header
+  $('expHead').innerHTML = (expHeaders||[]).map(h=>`<th>${h||''}</th>`).join('');
+
+  // render ทุก row แบบ raw ไม่ตีความ เพียงแค่แสดงตรงๆ
+  $('expBody').innerHTML = rows.slice(0,600).map(row => {
+    const padded = Array.from({length: Math.max(expHeaders.length, row.length)}, (_,i) => row[i]||'');
+    return '<tr>' + padded.map((cell, i) => {
+      const v = cell.trim();
+      if(v === '' || v === '0' || v === '0.00') return `<td style="color:var(--muted2)">${v}</td>`;
+      // col 2 (ราคา) = ตัวเลข จัดขวา
+      if(i === 2) {
+        const n = parseNum(v);
+        if(!isNaN(n) && n > 0) return `<td class="num pos">${fmtFull(n)}</td>`;
+      }
+      // col 0 (วันที่) bold
+      if(i === 0) return `<td style="font-weight:600;color:var(--blue)">${v}</td>`;
+      // อื่นๆ แสดงตรงๆ
+      return `<td>${v}</td>`;
+    }).join('') + '</tr>';
+  }).join('');
+
+  $('expCount').textContent = `แสดง ${Math.min(rows.length,600)} จาก ${rows.length} รายการ`;
 }
 
 // ══════════════════════════════════════════════
