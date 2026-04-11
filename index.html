@@ -93,15 +93,20 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 @media(max-width:680px){.grid2{grid-template-columns:1fr;}}
 
 /* TABLE */
-.tbl-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:12px;}
-th{text-align:left;padding:7px 10px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg3);}
-td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;white-space:nowrap;}
+.tbl-wrap{overflow-x:auto;width:100%;}
+table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+th{text-align:left;padding:7px 10px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap;background:var(--bg3);overflow:hidden;text-overflow:ellipsis;}
+td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:rgba(255,255,255,.02);}
 .num{text-align:right;font-variant-numeric:tabular-nums;}
 .pos{color:var(--green);}
 .neg{color:var(--red);}
+/* Column width helpers */
+.col-day{width:52px;}
+.col-num{width:120px;text-align:right;}
+.col-name{width:auto;}
+.col-total{width:130px;text-align:right;font-weight:600;}
 
 /* SECTION LABEL */
 .sec-label{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.05em;margin:14px 0 6px;}
@@ -893,20 +898,45 @@ function renderWeddingOut(rows) {
 // BUILD TABLE
 // ══════════════════════════════════════════════
 function buildTable(thead, tbody, headers, rows) {
-  if(thead) thead.innerHTML=(headers||[]).map(h=>`<th>${h||''}</th>`).join('');
+  const cols = headers || [];
+  const n = cols.length;
+
+  // inject colgroup ลงใน table parent
+  if(thead) {
+    const tbl = thead.closest('table');
+    if(tbl) {
+      const old = tbl.querySelector('colgroup');
+      if(old) old.remove();
+      const cg = document.createElement('colgroup');
+      cols.forEach((h, i) => {
+        const col = document.createElement('col');
+        if(i===0) col.style.width='54px';                         // วันที่
+        else if(i===n-1) col.style.width='130px';                 // col สุดท้าย = รวม
+        else if(/รายการ|รายจ่าย|label/i.test(h)) col.style.width='auto'; // ชื่อรายการ
+        else col.style.width='120px';                              // ตัวเลขทั่วไป
+        cg.appendChild(col);
+      });
+      tbl.insertBefore(cg, tbl.firstChild);
+    }
+    thead.innerHTML = cols.map((h,i)=>{
+      const align = i>0 ? ' style="text-align:right"' : '';
+      return `<th${align}>${h||''}</th>`;
+    }).join('');
+  }
+
   if(!tbody||!rows) return;
-  tbody.innerHTML=rows.map(row=>{
-    // pad row ให้ยาวเท่า headers เสมอ
-    const padded = Array.from({length: (headers||row).length}, (_,i) => row[i]||'');
-    return '<tr>'+padded.map((cell,i)=>{
-      // col 0 = วันที่/label เสมอ ไม่ต้องแปลงเป็นตัวเลข
-      if(i===0) return `<td>${cell}</td>`;
-      const trimmed = cell.trim();
-      if(trimmed===''||trimmed==='0.00'||trimmed==='0') return `<td style="color:var(--muted2)">${trimmed||''}</td>`;
-      const n=parseNum(trimmed);
-      if(!isNaN(n)&&n!==0) return `<td class="num ${n<0?'neg':'pos'}">${fmtFull(n)}</td>`;
+  tbody.innerHTML = rows.map(row => {
+    const padded = Array.from({length: cols.length||row.length}, (_,i) => (row[i]||'').trim());
+    return '<tr>' + padded.map((cell, i) => {
+      if(i===0) return `<td style="color:var(--blue);font-weight:600">${cell}</td>`;
+      if(cell===''||cell==='0.00'||cell==='0') return `<td style="color:var(--muted2);text-align:right">${cell}</td>`;
+      const num = parseNum(cell);
+      if(!isNaN(num) && num!==0) {
+        const cls = i===cols.length-1 ? (num<0?'neg':'pos') + '" style="font-weight:600;text-align:right' : (num<0?'neg':'pos') + '" style="text-align:right';
+        return `<td class="${cls}">${fmtFull(num)}</td>`;
+      }
       return `<td>${cell}</td>`;
-    }).join('')+'</tr>';
+    }).join('') + '</tr>';
   }).join('');
 }
 
