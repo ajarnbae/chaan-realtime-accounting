@@ -771,6 +771,12 @@ function scheduleRefresh() {
 // RENDER ALL
 // ══════════════════════════════════════════════
 function renderAll() {
+  // Destroy ALL existing charts first to prevent canvas reuse error
+  Object.keys(charts).forEach(k => {
+    try { if(charts[k]) { charts[k].destroy(); charts[k]=null; } } catch(e){}
+  });
+  charts = {};
+
   if(D.summary)    renderSummary(D.summary);
   if(D.restaurant) renderRestaurant(D.restaurant);
   // save snapshot for growth comparison
