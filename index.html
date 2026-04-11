@@ -162,6 +162,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <button class="sec-btn active" onclick="switchSection('restaurant',this)">🍜 ร้านอาหาร</button>
     <button class="sec-btn" onclick="switchSection('wedding',this)">💍 Wedding</button>
     <button class="sec-btn" onclick="switchSection('growth',this)">📈 เปรียบเทียบเดือน</button>
+    <button class="sec-btn" onclick="switchSection('months',this)" id="mmBtn">⚙ จัดการเดือน</button>
   </div>
   <div style="display:flex;align-items:center;gap:8px;">
     <span style="font-size:11px;color:var(--muted);">เดือน:</span>
@@ -446,48 +447,163 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
 </div><!-- /sec-growth -->
 
+<!-- ═══ MONTH MANAGER SECTION ═══ -->
+<div id="sec-months" class="wrap" style="display:none;">
+
+  <!-- EXISTING MONTHS LIST -->
+  <div class="mm-card">
+    <div class="card-title" style="color:var(--blue)">เดือนที่มีอยู่</div>
+    <div id="mmMonthList"></div>
+  </div>
+
+  <!-- ADD NEW MONTH FORM -->
+  <div class="mm-card">
+    <div class="card-title" style="color:var(--green)">เพิ่มเดือนใหม่</div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="step-badge">1</div>
+        <span style="font-size:12px;color:var(--muted);">วาง URL pubhtml ของชีทใหม่ แล้วกด "ดึง GID อัตโนมัติ"</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input class="mm-input" id="newSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/e/PACX-1v.../pubhtml" style="flex:1;" />
+        <button class="btn-primary" onclick="autoDetectGIDs()" id="detectBtn" style="white-space:nowrap;padding:8px 14px;font-size:12px;">🔍 ดึง GID</button>
+      </div>
+      <div id="detectStatus" style="font-size:12px;min-height:16px;"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div class="step-badge">2</div>
+      <span style="font-size:12px;color:var(--muted);">ตั้งชื่อเดือนและตรวจสอบ GID (ระบบดึงให้อัตโนมัติ)</span>
+    </div>
+
+    <div style="margin-bottom:10px;">
+      <div class="mm-gid-lbl" style="margin-bottom:4px;">ชื่อเดือน (แสดงใน dropdown)</div>
+      <input class="mm-input" id="newMonthLabel" placeholder="เช่น พฤษภาคม 2026" />
+    </div>
+
+    <div class="mm-gid-grid">
+      <div class="mm-gid-row"><div class="mm-gid-lbl">SUMMARY เดือน</div><input class="mm-input" id="ng-summary" placeholder="gid"></div>
+      <div class="mm-gid-row"><div class="mm-gid-lbl">รายได้-รายจ่ายร้านอาหาร</div><input class="mm-input" id="ng-restaurant" placeholder="gid"></div>
+      <div class="mm-gid-row"><div class="mm-gid-lbl">กสิกร_สรุปรายได้รายวัน</div><input class="mm-input" id="ng-kbankIn" placeholder="gid"></div>
+      <div class="mm-gid-row"><div class="mm-gid-lbl">กสิกร_สรุปรายจ่ายรายวัน</div><input class="mm-input" id="ng-kbankOut" placeholder="gid"></div>
+      <div class="mm-gid-row"><div class="mm-gid-lbl">รายจ่ายใบรายการ</div><input class="mm-input" id="ng-expDetail" placeholder="gid"></div>
+      <div class="mm-gid-row"><div class="mm-gid-lbl">สรุปค่าใช้จ่ายใบรายการ</div><input class="mm-input" id="ng-expSum" placeholder="gid"></div>
+      <div class="mm-gid-row"><div class="mm-gid-lbl">สรุป Wedding</div><input class="mm-input" id="ng-weddingSum" placeholder="gid"></div>
+      <div class="mm-gid-row"><div class="mm-gid-lbl">รายได้ Wedding</div><input class="mm-input" id="ng-weddingIn" placeholder="gid"></div>
+      <div class="mm-gid-row"><div class="mm-gid-lbl">รายจ่าย Wedding</div><input class="mm-input" id="ng-weddingOut" placeholder="gid"></div>
+      <div class="mm-gid-row"><div class="mm-gid-lbl">Sheet ID (PACX-1v...)</div><input class="mm-input" id="ng-sheetId" placeholder="ดึงอัตโนมัติ"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin:14px 0 10px;">
+      <div class="step-badge">3</div>
+      <span style="font-size:12px;color:var(--muted);">กด "บันทึกเดือนใหม่" — ระบบจะบันทึกและเพิ่มใน dropdown ทันที</span>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn-primary" onclick="saveNewMonth()" style="font-size:13px;">💾 บันทึกเดือนใหม่</button>
+      <button class="btn-ghost" onclick="clearNewMonthForm()" style="font-size:13px;">ล้างฟอร์ม</button>
+    </div>
+    <div id="saveStatus" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="mm-card" style="border-color:rgba(88,166,255,.2);">
+    <div class="card-title" style="color:var(--blue)">วิธีใช้งาน</div>
+    <div style="font-size:12px;color:var(--muted);line-height:2.2;">
+      📌 ข้อมูลเดือนจะถูกบันทึกใน <strong style="color:var(--text)">browser localStorage</strong> — ใช้ได้ตลอด ไม่หายแม้ปิดเบราว์เซอร์<br>
+      📌 ชีทใหม่ต้อง <strong style="color:var(--text)">Publish to web เป็น CSV</strong> ก่อน (File → Share → Publish to web)<br>
+      📌 Tab ในชีทต้องมี <strong style="color:var(--text)">ชื่อและโครงสร้างเหมือนกันทุกเดือน</strong><br>
+      ⚠️ ถ้าแชร์ link ให้คนอื่น — ข้อมูล localStorage <strong style="color:var(--yellow)">ไม่ sync ข้ามเบราว์เซอร์</strong> แต่ละคนต้องเพิ่มเดือนเอง หรือให้ผมอัปเดต hardcode ใน HTML แทน
+    </div>
+  </div>
+</div><!-- /sec-months -->
+
 <script>
 // ══════════════════════════════════════════════
-// MONTHS CONFIG — เพิ่มเดือนใหม่ที่นี่
+// CONFIG SHEET — แก้เดือนใหม่ที่ Google Sheet เลย
 // ══════════════════════════════════════════════
-const MONTHS = [
+// เพิ่มเดือนใหม่: เปิด lukjan_config Sheet → เพิ่ม Row → บันทึก
+// ทุกคนเห็นเหมือนกันทันที ไม่ต้องแก้ไฟล์นี้
+const CONFIG_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT527_JQpDIvIg_IWG80S1ImOWpFcrKgVvs-lxWT6f-Mida-1LayXqZGSVJZVtTC_AvoAAQiCxlDyQE/pub?output=csv';
+
+// Fallback hardcode (ใช้ถ้า Config Sheet โหลดไม่ได้)
+const MONTHS_FALLBACK = [
   {
     label: 'เมษายน 2026',
     sheetId: '2PACX-1vQlrlkOZQrT6rn8uaC3cPzqA52lRkzBkDszAkhaS4hk-LzDdFYNDzeQWOoPX0HpQnXZtin3QS00a1pG',
-    gids: {
-      summary:    '239909121',
-      restaurant: '196080681',
-      kbankIn:    '1961079333',
-      kbankOut:   '881911619',
-      expDetail:  '1607322378',
-      expSum:     '1477691262',
-      weddingSum: '1098787073',
-      weddingIn:  '1980572075',
-      weddingOut: '424100009',
-    }
+    gids: { summary:'239909121', restaurant:'196080681', kbankIn:'1961079333', kbankOut:'881911619', expDetail:'1607322378', expSum:'1477691262', weddingSum:'1098787073', weddingIn:'1980572075', weddingOut:'424100009' }
   },
-  // ── เพิ่มเดือนถัดไปแบบนี้ ──
-  // {
-  //   label: 'พฤษภาคม 2026',
-  //   sheetId: 'PACX-1v...ใส่ sheetId ของชีทเดือนใหม่...',
-  //   gids: {
-  //     summary:    '...gid...',
-  //     restaurant: '...gid...',
-  //     kbankIn:    '...gid...',
-  //     kbankOut:   '...gid...',
-  //     expDetail:  '...gid...',
-  //     expSum:     '...gid...',
-  //     weddingSum: '...gid...',
-  //     weddingIn:  '...gid...',
-  //     weddingOut: '...gid...',
-  //   }
-  // },
+  {
+    label: 'พฤษภาคม 2026',
+    sheetId: '2PACX-1vRfCIm_55i8LhRG2aAQPCdf83o5gj0b3azQwIWxj6dGWx9P03_BZxZY2K0CFjmbgiBPpXgiS0E8Kd69',
+    gids: { summary:'', restaurant:'', kbankIn:'', kbankOut:'', expDetail:'', expSum:'', weddingSum:'', weddingIn:'', weddingOut:'' }
+  },
 ];
-const AUTO_REFRESH = 60; // วินาที
+
+let MONTHS = [...MONTHS_FALLBACK];
+const AUTO_REFRESH = 60;
 let currentMonthIdx = 0;
-// สร้าง SHEET_ID และ GIDS แบบ dynamic จาก currentMonthIdx
 let SHEET_ID = MONTHS[0].sheetId;
 let GIDS     = MONTHS[0].gids;
+
+// ── โหลด Config Sheet และ parse เดือนทั้งหมด ──
+async function loadConfigSheet() {
+  try {
+    let csv = null;
+    // try direct
+    try {
+      const r = await fetch(CONFIG_CSV_URL, {cache:'no-store'});
+      if(r.ok) { const t=await r.text(); if(t.length>10&&!t.startsWith('<')) csv=t; }
+    } catch(e){}
+    // try proxy
+    if(!csv) {
+      for(const px of PROXIES) {
+        try {
+          const r=await fetch(px(CONFIG_CSV_URL),{cache:'no-store'});
+          if(r.ok){ const t=await r.text(); if(t.length>10&&!t.startsWith('<!')) {csv=t;break;} }
+        } catch(e){}
+      }
+    }
+    if(!csv) { console.warn('Config Sheet load failed — using fallback'); return false; }
+
+    const rows = csv.trim().split('\n').map(l=>{
+      const res=[]; let cur='',inQ=false;
+      for(let i=0;i<l.length;i++){const c=l[i];if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){res.push(cur.trim());cur='';}else cur+=c;}
+      res.push(cur.trim()); return res;
+    });
+
+    if(rows.length < 2) return false;
+    const h = rows[0]; // header row
+    const gi = k => h.findIndex(x=>x.trim()===k);
+    const iLabel=gi('label'), iSid=gi('sheetId'),
+          iSum=gi('summary'), iRest=gi('restaurant'),
+          iKIn=gi('kbankIn'), iKOut=gi('kbankOut'),
+          iED=gi('expDetail'), iES=gi('expSum'),
+          iWS=gi('weddingSum'), iWI=gi('weddingIn'), iWO=gi('weddingOut');
+
+    const parsed = rows.slice(1)
+      .filter(r => r[iLabel]&&r[iSid])
+      .map(r => ({
+        label:    r[iLabel],
+        sheetId:  r[iSid],
+        gids: {
+          summary:    r[iSum]||'',    restaurant: r[iRest]||'',
+          kbankIn:    r[iKIn]||'',   kbankOut:   r[iKOut]||'',
+          expDetail:  r[iED]||'',    expSum:     r[iES]||'',
+          weddingSum: r[iWS]||'',    weddingIn:  r[iWI]||'',
+          weddingOut: r[iWO]||'',
+        }
+      }));
+
+    if(parsed.length > 0) {
+      MONTHS = parsed;
+      console.log('Config loaded:', MONTHS.length, 'months');
+      return true;
+    }
+    return false;
+  } catch(e) { console.warn('Config error:', e); return false; }
+}
 
 // ══════════════════════════════════════════════
 // CORS PROXIES
@@ -1072,7 +1188,7 @@ function showTab(name, section, btn) {
   btn.classList.add('active');
 }
 
-// switchSection moved to INIT block
+
 
 // ══════════════════════════════════════════════
 // MONTH SWITCHING
@@ -1232,9 +1348,210 @@ function switchSection(sec, btn) {
 }
 
 // ══════════════════════════════════════════════
+// MONTH MANAGER — localStorage persistence
+// ══════════════════════════════════════════════
+const LS_KEY = 'lukjan_months_v2';
+
+function loadSavedMonths() {
+  try {
+    const saved = localStorage.getItem(LS_KEY);
+    if(saved) {
+      const parsed = JSON.parse(saved);
+      // merge with hardcoded MONTHS (hardcoded first, saved extras after)
+      parsed.forEach(m => {
+        if(!MONTHS.find(x=>x.label===m.label)) MONTHS.push(m);
+      });
+    }
+  } catch(e) {}
+}
+
+function saveMonthsToStorage() {
+  // save only non-hardcoded months (idx >= 1 since MONTHS[0] is hardcoded)
+  const extra = MONTHS.slice(1);
+  localStorage.setItem(LS_KEY, JSON.stringify(extra));
+}
+
+function renderMMList() {
+  const list = $('mmMonthList');
+  if(!MONTHS.length) { list.innerHTML='<div style="color:var(--muted);font-size:12px;padding:8px;">ยังไม่มีเดือน</div>'; return; }
+  list.innerHTML = MONTHS.map((m,i) => `
+    <div class="mm-month-item ${i===currentMonthIdx?'active-month':''}">
+      <div class="mm-month-dot"></div>
+      <div style="flex:1;">
+        <div class="mm-month-label">${m.label}</div>
+        <div class="mm-month-sub">${m.sheetId.slice(0,30)}...</div>
+      </div>
+      <div class="mm-month-actions">
+        <button class="mm-btn" onclick="switchMonthAndGo(${i})">
+          ${i===currentMonthIdx?'✓ กำลังดู':'ดูข้อมูล'}
+        </button>
+        ${i>0?`<button class="mm-btn danger" onclick="deleteMonth(${i})">ลบ</button>`:'<span style="font-size:10px;color:var(--muted2);padding:4px 6px;">default</span>'}
+      </div>
+    </div>`
+  ).join('');
+}
+
+function switchMonthAndGo(idx) {
+  $('monthSelect').value = idx;
+  switchMonth(idx);
+  // switch to restaurant view
+  document.querySelectorAll('.sec-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.sec-btn').classList.add('active');
+  switchSection('restaurant', document.querySelector('.sec-btn'));
+}
+
+function deleteMonth(idx) {
+  if(idx===0) return;
+  if(!confirm(`ลบเดือน "${MONTHS[idx].label}" ออก?`)) return;
+  MONTHS.splice(idx, 1);
+  saveMonthsToStorage();
+  buildMonthSelect();
+  renderMMList();
+  if(currentMonthIdx >= MONTHS.length) {
+    currentMonthIdx = 0;
+    switchMonth(0);
+  }
+}
+
+async function autoDetectGIDs() {
+  const url = $('newSheetUrl').value.trim();
+  if(!url) { setDetectStatus('กรุณาใส่ URL ก่อน','err'); return; }
+
+  // Extract sheetId from URL
+  const match = url.match(/\/e\/([\w-]+)\//);
+  if(!match) { setDetectStatus('URL ไม่ถูกต้อง — ต้องเป็น /e/PACX.../pubhtml','err'); return; }
+  const sid = match[1];
+  $('ng-sheetId').value = sid;
+
+  setDetectStatus('⟳ กำลังดึง GID จาก Sheet...','loading');
+  $('detectBtn').disabled = true;
+
+  // Tab name → gid field mapping (by order/known names)
+  const TAB_MAP = {
+    'summary':    ['SUMMARY','summary','สรุป เดือน','สรุปเดือน'],
+    'restaurant': ['รายได้รายจ่ายร้านอาหารรายวัน','ร้านอาหารรายวัน','รายได้รายจ่าย'],
+    'kbankIn':    ['กสิกร_สรุปรายได้รายวัน','กสิกร รายรับ','kbankIn'],
+    'kbankOut':   ['กสิกร_สรุปรายจ่ายรายวัน','กสิกร รายจ่าย','kbankOut'],
+    'expDetail':  ['รายจ่ายใบรายการ','ใบรายการ','expDetail'],
+    'expSum':     ['สรุปค่าใช้จ่ายใบรายการ','สรุปค่าใช้จ่าย','expSum'],
+    'weddingSum': ['สรุป Wedding','สรุปWedding','weddingSum'],
+    'weddingIn':  ['รายได้ Wedding','รายได้Wedding','weddingIn'],
+    'weddingOut': ['รายจ่าย Wedding','รายจ่ายWedding','weddingOut'],
+  };
+
+  // Try fetching pubhtml to find gids — Google embeds sheet names + gids in the HTML
+  try {
+    const htmlUrl = url.includes('pubhtml') ? url : url.replace(/pub.*/, 'pubhtml');
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(htmlUrl);
+    const r = await fetch(proxyUrl, {cache:'no-store'});
+    if(r.ok) {
+      const html = await r.text();
+      // Extract gid→sheetname from the navigation links
+      // Google format: <li id="sheet-button-NNN" ...>SHEETNAME</li>  or data-gid="NNN"
+      const gidMatches = [...html.matchAll(/gid=(\d+)[^"]*"[^>]*>\s*([^<]+)/g)];
+      const btnMatches = [...html.matchAll(/id="sheet-button-(\d+)"[^>]*>\s*<[^>]+>\s*([^<]+)/g)];
+      const allMatches = [...gidMatches, ...btnMatches];
+
+      let found = 0;
+      allMatches.forEach(([_, gid, rawName]) => {
+        const name = rawName.trim();
+        Object.entries(TAB_MAP).forEach(([key, variants]) => {
+          if(variants.some(v => name.toLowerCase().includes(v.toLowerCase()) || v.toLowerCase().includes(name.toLowerCase()))) {
+            const el = $('ng-' + key);
+            if(el && !el.value) { el.value = gid; found++; }
+          }
+        });
+      });
+
+      if(found > 0) {
+        setDetectStatus(`✓ พบ ${found} GID จากชื่อ tab — ตรวจสอบและกรอกที่เหลือด้วยตนเอง`, 'ok');
+      } else {
+        setDetectStatus('ดึง GID อัตโนมัติไม่ได้ — Sheet ID ถูกดึงแล้ว กรุณากรอก GID เองตามที่คัดลอกจาก URL ของแต่ละ tab', 'warn');
+      }
+    }
+  } catch(e) {
+    setDetectStatus('Sheet ID ถูกดึงแล้ว กรุณากรอก GID เองจาก URL ของแต่ละ tab', 'warn');
+  }
+
+  // Pre-fill label from month name if found in URL or title
+  if(!$('newMonthLabel').value) {
+    const monthMatch = url.match(/(มกรา|กุมภา|มีนา|เมษา|พฤษภา|มิถุนา|กรกฎา|สิงหา|กันยา|ตุลา|พฤศจิกา|ธันวา)[^\s/]*/i);
+    if(monthMatch) $('newMonthLabel').value = monthMatch[0] + ' 2026';
+  }
+
+  $('detectBtn').disabled = false;
+}
+
+function setDetectStatus(msg, type) {
+  const el = $('detectStatus');
+  el.textContent = msg;
+  el.style.color = type==='ok'?'var(--green)':type==='err'?'var(--red)':'var(--yellow)';
+}
+
+function saveNewMonth() {
+  const label = $('newMonthLabel').value.trim();
+  const sid   = $('ng-sheetId').value.trim();
+  if(!label) { $('saveStatus').textContent='กรุณาใส่ชื่อเดือน'; $('saveStatus').style.color='var(--red)'; return; }
+  if(!sid)   { $('saveStatus').textContent='ยังไม่มี Sheet ID — กด "ดึง GID" ก่อน'; $('saveStatus').style.color='var(--red)'; return; }
+
+  const gids = {};
+  ['summary','restaurant','kbankIn','kbankOut','expDetail','expSum','weddingSum','weddingIn','weddingOut']
+    .forEach(k => { gids[k] = $('ng-'+k).value.trim() || ''; });
+
+  const emptyGids = Object.entries(gids).filter(([,v])=>!v).map(([k])=>k);
+  if(emptyGids.length > 0) {
+    if(!confirm(`GID ที่ยังว่าง: ${emptyGids.join(', ')}\nต้องการบันทึกต่อไปหรือไม่?`)) return;
+  }
+
+  // Check duplicate
+  if(MONTHS.find(m=>m.label===label)) {
+    $('saveStatus').textContent='มีเดือน "'+label+'" อยู่แล้ว';
+    $('saveStatus').style.color='var(--red)'; return;
+  }
+
+  MONTHS.push({ label, sheetId: sid, gids });
+  saveMonthsToStorage();
+  buildMonthSelect();
+  renderMMList();
+
+  $('saveStatus').textContent = '✓ บันทึก "'+label+'" แล้ว! กด "ดูข้อมูล" ในรายการด้านบนเพื่อเปิด';
+  $('saveStatus').style.color = 'var(--green)';
+  clearNewMonthForm();
+}
+
+function clearNewMonthForm() {
+  ['newSheetUrl','newMonthLabel','ng-summary','ng-restaurant','ng-kbankIn','ng-kbankOut',
+   'ng-expDetail','ng-expSum','ng-weddingSum','ng-weddingIn','ng-weddingOut','ng-sheetId']
+    .forEach(id => { const el=$(id); if(el) el.value=''; });
+  $('detectStatus').textContent='';
+  $('saveStatus').textContent='';
+}
+
+// patch switchSection to render mm list
+const _origSwitchSection = switchSection;
+function switchSection(sec, btn) {
+  $('sec-restaurant').style.display = sec==='restaurant'?'block':'none';
+  $('sec-wedding').style.display    = sec==='wedding'?'block':'none';
+  $('sec-growth').style.display     = sec==='growth'?'block':'none';
+  $('sec-months').style.display     = sec==='months'?'block':'none';
+  document.querySelectorAll('.sec-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(sec==='growth') renderGrowth();
+  if(sec==='months') renderMMList();
+}
+
+// ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
-window.onload = () => {
+window.onload = async () => {
+  // โหลด Config Sheet ก่อน — ดึงรายชื่อเดือนทั้งหมด
+  $('loadTxt').textContent = 'กำลังโหลด config...';
+  await loadConfigSheet();
+  // merge localStorage extras (ถ้ามี)
+  loadSavedMonths();
+  // set initial month
+  SHEET_ID = MONTHS[0].sheetId;
+  GIDS     = MONTHS[0].gids;
   buildMonthSelect();
   loadAll();
 };
