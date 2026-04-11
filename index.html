@@ -1357,8 +1357,7 @@ function loadSavedMonths() {
     const saved = localStorage.getItem(LS_KEY);
     if(saved) {
       const parsed = JSON.parse(saved);
-      // เพิ่มเฉพาะเดือนที่ไม่มีใน MONTHS (จาก Config Sheet) เท่านั้น
-      // ไม่ overwrite เดือนที่ Config Sheet ดึงมาแล้ว
+      // merge with hardcoded MONTHS (hardcoded first, saved extras after)
       parsed.forEach(m => {
         if(!MONTHS.find(x=>x.label===m.label)) MONTHS.push(m);
       });
@@ -1551,17 +1550,16 @@ window.onload = async () => {
   const configOk = await loadConfigSheet();
 
   if(configOk) {
-    // Config โหลดสำเร็จ — ล้าง localStorage เพื่อป้องกัน stale GIDs ทับ
-    // เก็บเฉพาะเดือนที่ไม่มีใน config sheet (เดือนที่เพิ่มผ่าน UI เท่านั้น)
+    // Config โหลดสำเร็จ
+    // ล้าง localStorage เพื่อป้องกัน stale GIDs ทับข้อมูล config ใหม่
     try {
       const saved = localStorage.getItem(LS_KEY);
       if(saved) {
         const parsed = JSON.parse(saved);
-        const configLabels = MONTHS.map(m=>m.label);
-        // เอาเฉพาะเดือนที่ไม่มีใน config ออกมา
-        const extras = parsed.filter(m=>!configLabels.includes(m.label));
-        extras.forEach(m=>MONTHS.push(m));
-        // บันทึก extras กลับ (ตัด stale ทิ้ง)
+        const configLabels = MONTHS.map(m => m.label);
+        // เก็บเฉพาะเดือนที่เพิ่มผ่าน UI ที่ยังไม่มีใน config
+        const extras = parsed.filter(m => !configLabels.includes(m.label));
+        extras.forEach(m => MONTHS.push(m));
         localStorage.setItem(LS_KEY, JSON.stringify(extras));
       }
     } catch(e) {}
@@ -1570,7 +1568,7 @@ window.onload = async () => {
     loadSavedMonths();
   }
 
-  // 2. set initial month จาก MONTHS ที่ได้
+  // 2. ตั้งค่าเดือนแรกจาก MONTHS ที่โหลดมาได้
   SHEET_ID = MONTHS[0].sheetId;
   GIDS     = MONTHS[0].gids;
   buildMonthSelect();
