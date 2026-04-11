@@ -622,6 +622,7 @@ let D = {}; // raw parsed data keyed by GIDS key
 let charts = {};
 let expAllRows = [], expHeaders = [];
 let refreshTimer = null;
+let isLoading = false; // prevent concurrent loads
 
 // ══════════════════════════════════════════════
 // FORMAT
@@ -707,6 +708,10 @@ async function fetchCSVWithTimeout(url, timeoutMs=8000) {
 }
 
 async function loadAll(silent=false) {
+  // ป้องกัน concurrent load
+  if(isLoading) { console.log('loadAll skipped — already loading'); return; }
+  isLoading = true;
+
   // Snapshot sheetId และ gids ตอน call เพื่อป้องกัน global เปลี่ยนระหว่าง async
   const currentSheetId = MONTHS[currentMonthIdx].sheetId;
   const currentGids    = MONTHS[currentMonthIdx].gids;
@@ -752,6 +757,7 @@ async function loadAll(silent=false) {
     $('errBanner').style.display='none';
   }
 
+  isLoading = false;
   renderAll();
   if(!refreshTimer) scheduleRefresh();
 }
@@ -1235,12 +1241,19 @@ function buildMonthSelect() {
 }
 
 async function switchMonth(idx) {
+  // หยุด auto-refresh ระหว่าง switch
+  if(refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+  isLoading = false; // reset flag
+
   currentMonthIdx = parseInt(idx);
   const m = MONTHS[currentMonthIdx];
-  // อัปเดต globals ก่อน
   SHEET_ID = m.sheetId;
   GIDS     = m.gids;
-  // reset data + charts
+
+  // Destroy charts ก่อน reset
+  Object.keys(charts).forEach(k => {
+    try { if(charts[k]) { charts[k].destroy(); charts[k]=null; } } catch(e){}
+  });
   D = {}; charts = {};
   $('brandSub').textContent = 'รายรับรายจ่าย — ' + m.label;
   console.log('Switching to:', m.label, 'sheetId:', m.sheetId);
