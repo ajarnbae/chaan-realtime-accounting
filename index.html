@@ -610,7 +610,7 @@ async function loadConfigSheet() {
 // ══════════════════════════════════════════════
 const PROXIES = [
   u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}&t=${Date.now()}`,
 ];
 let bestProxy = -1; // -1 = direct
 
@@ -721,9 +721,12 @@ async function loadAll(silent=false) {
   const keys = Object.keys(currentGids);
 
   // โหลดทุก tab พร้อมกัน — ใช้ sheetId จาก snapshot ไม่ใช่ global
+  // เพิ่ม timestamp เพื่อ bust proxy cache
+  const cacheBust = Date.now();
   const results = await Promise.all(
     keys.map(key => {
-      const url = `https://docs.google.com/spreadsheets/d/e/${currentSheetId}/pub?output=csv&gid=${currentGids[key]}`;
+      const url = `https://docs.google.com/spreadsheets/d/e/${currentSheetId}/pub?output=csv&gid=${currentGids[key]}&t=${cacheBust}`;
+      console.log('Fetching:', key, url.substring(0, 100));
       return fetchCSVWithTimeout(url, 10000);
     })
   );
@@ -787,29 +790,40 @@ function renderAll() {
 // ══════════════════════════════════════════════
 function renderSummary(rows) {
   const get = i => parseNum(rows[i]?.[1]);
-  $('s-capital').textContent  = fmtShort(get(0));
-  $('s-kincome').textContent  = fmtShort(get(2));
-  $('s-kexpense').textContent = fmtShort(get(3));
+
+  // Helper: set text safely
+  const setText = (id, val) => { const el=$(id); if(el) el.textContent=val; };
+  const setColor = (id, cond) => { const el=$(id); if(el) el.style.color=cond?'var(--green)':'var(--red)'; };
+
+  setText('s-capital',  fmtShort(get(0)));
+  setText('s-kincome',  fmtShort(get(2)));
+  setText('s-kexpense', fmtShort(get(3)));
   const knet = get(4);
-  $('s-knet').textContent = fmtShort(knet);
-  $('s-knet').style.color = knet>=0?'var(--green)':'var(--red)';
-  $('s-kbal').textContent  = fmtShort(get(5));
-  $('s-mbal').textContent  = fmtShort(get(7));
-  $('s-mincome').textContent  = fmtShort(get(9));
-  $('s-mexpense').textContent = fmtShort(get(10));
+  setText('s-knet', fmtShort(knet));
+  setColor('s-knet', knet>=0);
+  setText('s-kbal', fmtShort(get(5)));
+  setText('s-mbal', fmtShort(get(7)));
+  setText('s-mincome',  fmtShort(get(9)));
+  setText('s-mexpense', fmtShort(get(10)));
   const mnet = get(11);
-  $('s-mnet').textContent = fmtShort(mnet);
-  $('s-mnet').style.color = mnet>=0?'var(--green)':'var(--red)';
+  setText('s-mnet', fmtShort(mnet));
+  setColor('s-mnet', mnet>=0);
 
   // ★ OVERALL PROFIT = knet + mnet
   const overall = knet + mnet;
   const el = $('s-overall');
-  el.textContent = fmtFull(overall);
-  el.style.color = overall>=0?'var(--green)':'var(--red)';
-  $('s-overall-formula').textContent =
-    `(รายได้กสิกร ${fmtShort(get(2))} − รายจ่ายกสิกร ${fmtShort(get(3))}) + (รายได้บัญชีแม่ ${fmtShort(get(9))} − รายจ่ายบัญชีแม่ ${fmtShort(get(10))})`;
+  if(el) {
+    el.textContent = fmtFull(overall);
+    el.style.color = overall>=0?'var(--green)':'var(--red)';
+  }
+  const elFormula = $('s-overall-formula');
+  if(elFormula) {
+    elFormula.textContent =
+      `(รายได้กสิกร ${fmtShort(get(2))} − รายจ่ายกสิกร ${fmtShort(get(3))}) + (รายได้บัญชีแม่ ${fmtShort(get(9))} − รายจ่ายบัญชีแม่ ${fmtShort(get(10))})`;
+  }
   // update banner border color
-  $('s-overall').closest('div[style*="border-radius:14px"]').style.borderColor = overall>=0?'rgba(63,185,80,.3)':'rgba(248,81,73,.3)';
+  const banner = el && el.closest('div[style*="border-radius:14px"]');
+  if(banner) banner.style.borderColor = overall>=0?'rgba(63,185,80,.3)':'rgba(248,81,73,.3)';
 
   // Donut
   const inc=get(2), exp=get(3);
