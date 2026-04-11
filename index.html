@@ -737,13 +737,31 @@ function renderExpSum(rows) {
   if(rows.length<2) return;
   const headers=rows[0];
   const data=rows.slice(1).filter(r=>r[0]&&!isNaN(parseFloat(r[0])));
-  const sumRow=rows.find(r=>(r[0]||'').includes('สรุป'));
-  const si=i=>parseNum(sumRow?.[i]);
 
-  const fresh=si(1),other=si(2),total=si(3)||si(headers.length-1);
+  // หา sumRow — ลองทั้ง "สรุป" และ row สุดท้ายที่มีตัวเลข
+  let sumRow = rows.find(r=>(r[0]||'').includes('สรุป'));
+  if(!sumRow) {
+    // ถ้าไม่มีแถวสรุป ใช้การรวมเองจากทุก data row
+    const fresh = data.reduce((s,r)=>s+parseNum(r[1]),0);
+    const other = data.reduce((s,r)=>s+parseNum(r[2]),0);
+    const total = data.reduce((s,r)=>s+parseNum(r[headers.length-1]||r[3]),0);
+    $('es-fresh').textContent=fmtShort(fresh);
+    $('es-other').textContent=fmtShort(other);
+    $('es-total').textContent=fmtShort(total||fresh+other);
+    renderExpSumCharts(fresh, other, data, headers);
+    buildTable($('esSumHead'),$('esSumBody'),headers,data);
+    return;
+  }
+  const si=i=>parseNum(sumRow?.[i]);
+  const fresh=si(1),other=si(2),total=si(3)||si(headers.length-1)||fresh+other;
   $('es-fresh').textContent=fmtShort(fresh);
   $('es-other').textContent=fmtShort(other);
   $('es-total').textContent=fmtShort(total);
+  renderExpSumCharts(fresh, other, data, headers);
+  buildTable($('esSumHead'),$('esSumBody'),headers,data);
+}
+
+function renderExpSumCharts(fresh, other, data, headers) {
 
   if(charts.expPie) charts.expPie.destroy();
   charts.expPie=new Chart($('expPieC'),{
@@ -765,8 +783,6 @@ function renderExpSum(rows) {
       scales:{x:{ticks:{color:'#6e7681',font:{size:10}},grid:{display:false}},
         y:{ticks:{color:'#6e7681',callback:v=>'฿'+(v/1000).toFixed(0)+'K',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}}}}
   });
-
-  buildTable($('esSumHead'),$('esSumBody'),headers,data);
 }
 
 // ══════════════════════════════════════════════
