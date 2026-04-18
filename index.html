@@ -161,6 +161,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div style="display:flex;gap:0;">
     <button class="sec-btn active" onclick="switchSection('restaurant',this)">🍜 ร้านอาหาร</button>
     <button class="sec-btn" onclick="switchSection('wedding',this)">💍 Wedding</button>
+    <button class="sec-btn" onclick="switchSection('central',this)">🏦 กองกลาง</button>
     <button class="sec-btn" onclick="switchSection('growth',this)">📈 เปรียบเทียบเดือน</button>
     <button class="sec-btn" onclick="switchSection('months',this)" id="mmBtn">⚙ จัดการเดือน</button>
   </div>
@@ -193,7 +194,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <!-- OVERALL PROFIT BANNER -->
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 22px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
       <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:500;letter-spacing:.05em;">กำไรโดยรวม (กสิกร + บัญชีแม่)</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:3px;font-weight:500;letter-spacing:.05em;">กำไรบัญชีกสิกร (รวมเงินสด)</div>
         <div style="font-size:11px;color:var(--muted2);" id="s-overall-formula">—</div>
       </div>
       <div style="text-align:right;">
@@ -208,14 +209,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="mc g"><div class="mc-lbl">รายได้สุทธิบัญชีกสิกร</div><div class="mc-val" id="s-kincome">—</div></div>
       <div class="mc r"><div class="mc-lbl">รายจ่ายสุทธิบัญชีกสิกร</div><div class="mc-val" id="s-kexpense">—</div></div>
       <div class="mc y"><div class="mc-lbl">รายได้ - รายจ่าย</div><div class="mc-val" id="s-knet">—</div></div>
-      <div class="mc p"><div class="mc-lbl">ยอดคงเหลือบัญชีกสิกร</div><div class="mc-val" id="s-kbal">—</div></div>
-    </div>
-    <div class="sec-label">บัญชีแม่ (เงินสด)</div>
-    <div class="metrics">
-      <div class="mc b"><div class="mc-lbl">ยอดยกมาจากบัญชีแม่</div><div class="mc-val" id="s-mbal">—</div></div>
-      <div class="mc g"><div class="mc-lbl">รายได้สุทธิ</div><div class="mc-val" id="s-mincome">—</div></div>
-      <div class="mc r"><div class="mc-lbl">รายจ่ายสุทธิ</div><div class="mc-val" id="s-mexpense">—</div></div>
-      <div class="mc y"><div class="mc-lbl">กำไร / ขาดทุนสุทธิ</div><div class="mc-val" id="s-mnet">—</div></div>
+      <div class="mc p"><div class="mc-lbl">ยอดคงเหลือกสิกร (รวมเงินสด)</div><div class="mc-val" id="s-kbal">—</div></div>
     </div>
     <div class="grid2">
       <div class="card">
@@ -259,6 +253,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <!-- TAB: KBANK IN -->
   <div id="rtab-kbankIn" style="display:none;">
     <div class="metrics">
+      <div class="mc y"><div class="mc-lbl">เงินสด</div><div class="mc-val" id="ki-cash">—</div></div>
       <div class="mc p"><div class="mc-lbl">บัตรเครดิต (หลังหักค่าธรรมเนียม)</div><div class="mc-val" id="ki-credit">—</div></div>
       <div class="mc b"><div class="mc-lbl">เงินโอน / QR</div><div class="mc-val" id="ki-transfer">—</div></div>
       <div class="mc o"><div class="mc-lbl">Line Man</div><div class="mc-val" id="ki-lineman">—</div></div>
@@ -382,6 +377,79 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
 
 </div><!-- /sec-wedding -->
+
+<!-- ═══ CENTRAL FUND SECTION ═══ -->
+<div id="sec-central" class="wrap" style="display:none;">
+
+  <div id="cfNotConfigured" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;color:var(--muted);">
+    <div style="font-size:32px;margin-bottom:12px;">🏦</div>
+    <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;">ยังไม่ได้เชื่อมชีทกองกลาง</div>
+    <div style="font-size:12px;line-height:1.8;margin-bottom:10px;">
+      เพิ่ม column <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--blue)">centralFund</code> ใน Config Sheet<br>
+      แล้วใส่ sheetId ของชีทกองกลางในแถวใดก็ได้ (ใส่แถวเดียวพอ เพราะใช้ชีทเดียวทุกเดือน)
+    </div>
+  </div>
+
+  <div id="cfContent" style="display:none;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;text-align:center;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;">ยอดคงเหลือกองกลาง</div>
+      <div id="cf-balance" style="font-size:44px;font-weight:700;color:var(--teal);line-height:1.1;">—</div>
+      <div id="cf-balanceSub" style="font-size:12px;color:var(--muted2);margin-top:6px;">—</div>
+    </div>
+
+    <div class="metrics">
+      <div class="mc g">
+        <div class="mc-lbl">รวมเงินเข้าทั้งหมด</div>
+        <div class="mc-val" id="cf-totalIn">—</div>
+        <div class="mc-sub" id="cf-countIn">—</div>
+      </div>
+      <div class="mc r">
+        <div class="mc-lbl">รวมเงินออกทั้งหมด</div>
+        <div class="mc-val" id="cf-totalOut">—</div>
+        <div class="mc-sub" id="cf-countOut">—</div>
+      </div>
+      <div class="mc y">
+        <div class="mc-lbl">ยอดเข้าเดือนนี้</div>
+        <div class="mc-val" id="cf-monthIn">—</div>
+      </div>
+      <div class="mc o">
+        <div class="mc-lbl">ยอดออกเดือนนี้</div>
+        <div class="mc-val" id="cf-monthOut">—</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title" style="color:var(--teal)">เงินเข้า-ออก รายเดือน</div>
+        <div style="position:relative;height:240px;"><canvas id="cfMonthlyC" role="img" aria-label="Monthly in out"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--green)">ยอดสะสม รายเดือน</div>
+        <div style="position:relative;height:240px;"><canvas id="cfCumulC" role="img" aria-label="Cumulative balance"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div class="card-title" style="color:var(--blue)">รายการล่าสุด (15 รายการ)</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:90px;">วันที่</th>
+            <th style="width:70px;">ประเภท</th>
+            <th style="width:130px;text-align:right;">จำนวน</th>
+            <th>เหตุผล / รายละเอียด</th>
+            <th style="width:130px;text-align:right;">ยอดคงเหลือ</th>
+          </tr></thead>
+          <tbody id="cfTxBody"></tbody>
+        </table>
+      </div>
+      <div id="cfEmpty" style="text-align:center;padding:24px;color:var(--muted);font-size:13px;display:none;">
+        ยังไม่มีรายการ
+      </div>
+    </div>
+  </div>
+
+</div><!-- /sec-central -->
 
 <!-- ═══ GROWTH SECTION ═══ -->
 <div id="sec-growth" class="wrap" style="display:none;">
@@ -527,6 +595,10 @@ tr:hover td{background:rgba(255,255,255,.02);}
 // ทุกคนเห็นเหมือนกันทันที ไม่ต้องแก้ไฟล์นี้
 const CONFIG_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT527_JQpDIvIg_IWG80S1ImOWpFcrKgVvs-lxWT6f-Mida-1LayXqZGSVJZVtTC_AvoAAQiCxlDyQE/pub?output=csv';
 
+// Central Fund Sheet — published sheetId (ชีทเดียว ใช้ทุกเดือน)
+let CENTRAL_FUND_SHEET_ID = '';
+let centralFundData = null;
+
 // Fallback hardcode (ใช้ถ้า Config Sheet โหลดไม่ได้)
 const MONTHS_FALLBACK = [
   {
@@ -580,7 +652,8 @@ async function loadConfigSheet() {
           iSum=gi('summary'), iRest=gi('restaurant'),
           iKIn=gi('kbankIn'), iKOut=gi('kbankOut'),
           iED=gi('expDetail'), iES=gi('expSum'),
-          iWS=gi('weddingSum'), iWI=gi('weddingIn'), iWO=gi('weddingOut');
+          iWS=gi('weddingSum'), iWI=gi('weddingIn'), iWO=gi('weddingOut'),
+          iCF=gi('centralFund');
 
     const parsed = rows.slice(1)
       .filter(r => r[iLabel]&&r[iSid])
@@ -596,9 +669,15 @@ async function loadConfigSheet() {
         }
       }));
 
+    // Extract centralFund sheetId from any row that has it
+    if(iCF >= 0) {
+      const cfRow = rows.slice(1).find(r => r[iCF] && r[iCF].trim());
+      if(cfRow) CENTRAL_FUND_SHEET_ID = cfRow[iCF].trim();
+    }
+
     if(parsed.length > 0) {
       MONTHS = parsed;
-      console.log('Config loaded:', MONTHS.length, 'months');
+      console.log('Config loaded:', MONTHS.length, 'months, CF:', CENTRAL_FUND_SHEET_ID ? 'yes' : 'no');
       return true;
     }
     return false;
@@ -814,15 +893,9 @@ function renderSummary(rows) {
   setText('s-knet', fmtShort(knet));
   setColor('s-knet', knet>=0);
   setText('s-kbal', fmtShort(get(5)));
-  setText('s-mbal', fmtShort(get(7)));
-  setText('s-mincome',  fmtShort(get(9)));
-  setText('s-mexpense', fmtShort(get(10)));
-  const mnet = get(11);
-  setText('s-mnet', fmtShort(mnet));
-  setColor('s-mnet', mnet>=0);
 
-  // ★ OVERALL PROFIT = knet + mnet
-  const overall = knet + mnet;
+  // ★ OVERALL PROFIT = กสิกรเท่านั้น (รวมเงินสดแล้ว)
+  const overall = knet;
   const el = $('s-overall');
   if(el) {
     el.textContent = fmtFull(overall);
@@ -831,7 +904,7 @@ function renderSummary(rows) {
   const elFormula = $('s-overall-formula');
   if(elFormula) {
     elFormula.textContent =
-      `(รายได้กสิกร ${fmtShort(get(2))} − รายจ่ายกสิกร ${fmtShort(get(3))}) + (รายได้บัญชีแม่ ${fmtShort(get(9))} − รายจ่ายบัญชีแม่ ${fmtShort(get(10))})`;
+      `รายได้กสิกร ${fmtShort(get(2))} − รายจ่ายกสิกร ${fmtShort(get(3))}`;
   }
   // update banner border color
   const banner = el && el.closest('div[style*="border-radius:14px"]');
@@ -941,10 +1014,15 @@ function renderKbankIn(rows) {
   const si=i=>parseNum(sumRow?.[i]);
   const fi=(kws)=>headers.findIndex(h=>kws.some(k=>(h||'').toLowerCase().includes(k.toLowerCase())));
 
-  const creditI=fi(['บัตรเครดิต','credit']),transI=fi(['เงินโอน','โอน']),
+  const cashI=fi(['เงินสด','เงินเข้าเงินสด','cash']),
+        creditI=fi(['บัตรเครดิต','credit']),
+        transI=fi(['เงินโอน','โอน']),
         lineI=fi(['line man','lineman','ไลน์']),grabI=fi(['grab']),
         weddI=fi(['wedding','เวดดิ้ง','แต่ง']),totI=fi(['รวม','สรุปรายได้','total']);
 
+  // cash จาก col B (ถ้า fi ไม่เจอ ใช้ index 1 เป็น fallback)
+  const cashIdx = cashI>=0 ? cashI : 1;
+  $('ki-cash').textContent    = fmtShort(si(cashIdx));
   $('ki-credit').textContent  = creditI>=0?fmtShort(si(creditI)):'—';
   $('ki-transfer').textContent= transI>=0?fmtShort(si(transI)):'—';
   $('ki-lineman').textContent  = lineI>=0?fmtShort(si(lineI)):'—';
@@ -1357,7 +1435,7 @@ function renderGrowth() {
   });
 
   // Summary table
-  const gHeaders = ['เดือน','รายรับกสิกร','รายจ่ายกสิกร','กำไร/ขาดทุน (กสิกร)','รายได้บัญชีแม่','รายจ่ายบัญชีแม่','กำไรโดยรวม'];
+  const gHeaders = ['เดือน','รายรับกสิกร','รายจ่ายกสิกร','กำไร/ขาดทุน','รายรับร้านอาหาร','รายจ่ายร้านอาหาร'];
   $('growthHead').innerHTML = gHeaders.map((h,i)=>`<th${i>0?' style="text-align:right"':''}>${h}</th>`).join('');
   $('growthBody').innerHTML = months.map(m=>{
     const cells = [
@@ -1577,12 +1655,204 @@ const _origSwitchSection = switchSection;
 function switchSection(sec, btn) {
   $('sec-restaurant').style.display = sec==='restaurant'?'block':'none';
   $('sec-wedding').style.display    = sec==='wedding'?'block':'none';
+  $('sec-central').style.display    = sec==='central'?'block':'none';
   $('sec-growth').style.display     = sec==='growth'?'block':'none';
   $('sec-months').style.display     = sec==='months'?'block':'none';
   document.querySelectorAll('.sec-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   if(sec==='growth') renderGrowth();
   if(sec==='months') renderMMList();
+  if(sec==='central') loadCentralFund();
+}
+
+// ══════════════════════════════════════════════
+// CENTRAL FUND — load & render
+// ══════════════════════════════════════════════
+async function loadCentralFund(force) {
+  const content = document.getElementById('cfContent');
+  const notCfg  = document.getElementById('cfNotConfigured');
+
+  if(!CENTRAL_FUND_SHEET_ID) {
+    content.style.display = 'none';
+    notCfg.style.display = 'block';
+    return;
+  }
+
+  notCfg.style.display = 'none';
+  content.style.display = 'block';
+
+  if(centralFundData && !force) {
+    renderCentralFund(centralFundData);
+    return;
+  }
+
+  const cacheBust = Date.now();
+  const baseUrl = 'https://docs.google.com/spreadsheets/d/e/' + CENTRAL_FUND_SHEET_ID + '/pub?output=csv&t=' + cacheBust;
+  console.log('CF: fetching', baseUrl.substring(0,120));
+  const csv = await fetchCSVWithTimeout(baseUrl, 10000);
+
+  if(!csv) {
+    content.innerHTML = '<div style="padding:24px;text-align:center;color:var(--red);">โหลดชีทกองกลางไม่ได้ — ตรวจสอบ Publish to Web และ sheetId ใน Config</div>';
+    return;
+  }
+
+  const rows = parseCSV(csv);
+  centralFundData = rows;
+  renderCentralFund(rows);
+}
+
+function renderCentralFund(rows) {
+  if(!rows || rows.length < 2) {
+    $('cf-balance').textContent = fmtFull(0);
+    $('cf-totalIn').textContent = fmtShort(0);
+    $('cf-totalOut').textContent = fmtShort(0);
+    $('cf-monthIn').textContent = fmtShort(0);
+    $('cf-monthOut').textContent = fmtShort(0);
+    $('cfEmpty').style.display = 'block';
+    return;
+  }
+
+  // Find header row by looking for keywords
+  let headerIdx = -1;
+  for(let i=0;i<Math.min(10,rows.length);i++){
+    const rowStr = (rows[i]||[]).join('|');
+    if(rowStr.indexOf('วันที่') >= 0 && rowStr.indexOf('ประเภท') >= 0) { headerIdx = i; break; }
+  }
+  if(headerIdx < 0) headerIdx = 2;
+
+  const headers = rows[headerIdx];
+  const findCol = (kw) => headers.findIndex(h => (h||'').indexOf(kw) >= 0);
+  const dateI = findCol('วันที่');
+  const typeI = findCol('ประเภท');
+  const amtI  = findCol('จำนวน');
+  let reasonI = findCol('เหตุผล');
+  if(reasonI < 0) reasonI = findCol('รายละเอียด');
+
+  const txs = [];
+  for(let i=headerIdx+1; i<rows.length; i++){
+    const row = rows[i];
+    if(!row) continue;
+    const dateStr = (row[dateI]||'').trim();
+    const type = (row[typeI]||'').trim();
+    const amt = parseNum(row[amtI]);
+    const reason = (row[reasonI]||'').trim();
+    if(!dateStr || !type || amt === 0) continue;
+
+    let d = null;
+    const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    if(m) {
+      let dd = parseInt(m[1]);
+      let mm = parseInt(m[2]);
+      let yy = parseInt(m[3]);
+      if(yy < 100) yy += 2000;
+      if(yy > 2500) yy -= 543;
+      d = new Date(yy, mm-1, dd);
+    }
+    txs.push({date:d, dateStr:dateStr, type:type, amt:amt, reason:reason});
+  }
+
+  const totalIn = txs.filter(function(t){return t.type==='เข้า';}).reduce(function(s,t){return s+t.amt;}, 0);
+  const totalOut = txs.filter(function(t){return t.type==='ออก';}).reduce(function(s,t){return s+t.amt;}, 0);
+  const balance = totalIn - totalOut;
+  const countIn = txs.filter(function(t){return t.type==='เข้า';}).length;
+  const countOut = txs.filter(function(t){return t.type==='ออก';}).length;
+
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+  const thisMonthTxs = txs.filter(function(t){return t.date && t.date.getMonth()===thisMonth && t.date.getFullYear()===thisYear;});
+  const monthIn = thisMonthTxs.filter(function(t){return t.type==='เข้า';}).reduce(function(s,t){return s+t.amt;}, 0);
+  const monthOut = thisMonthTxs.filter(function(t){return t.type==='ออก';}).reduce(function(s,t){return s+t.amt;}, 0);
+
+  $('cf-balance').textContent = fmtFull(balance);
+  $('cf-balance').style.color = balance >= 0 ? 'var(--teal)' : 'var(--red)';
+  $('cf-balanceSub').textContent = 'รวม ' + txs.length + ' รายการ';
+  $('cf-totalIn').textContent = fmtShort(totalIn);
+  $('cf-countIn').textContent = countIn + ' รายการ';
+  $('cf-totalOut').textContent = fmtShort(totalOut);
+  $('cf-countOut').textContent = countOut + ' รายการ';
+  $('cf-monthIn').textContent = fmtShort(monthIn);
+  $('cf-monthOut').textContent = fmtShort(monthOut);
+
+  // Monthly breakdown
+  const monthly = {};
+  const thaiMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  txs.forEach(function(t){
+    if(!t.date) return;
+    const k = t.date.getFullYear() + '-' + String(t.date.getMonth()+1).padStart(2,'0');
+    if(!monthly[k]) monthly[k] = {in:0, out:0, label:''};
+    monthly[k].label = thaiMonths[t.date.getMonth()] + ' ' + (t.date.getFullYear()+543);
+    if(t.type==='เข้า') monthly[k].in += t.amt;
+    if(t.type==='ออก') monthly[k].out += t.amt;
+  });
+
+  const sortedMonths = Object.keys(monthly).sort();
+  const labels = sortedMonths.map(function(k){return monthly[k].label;});
+  const inData = sortedMonths.map(function(k){return monthly[k].in;});
+  const outData = sortedMonths.map(function(k){return monthly[k].out;});
+  let cum = 0;
+  const cumData = sortedMonths.map(function(k){cum += monthly[k].in - monthly[k].out; return cum;});
+
+  try{if(charts.cfMonthly) charts.cfMonthly.destroy();}catch(e){}
+  try{if(charts.cfCumul) charts.cfCumul.destroy();}catch(e){}
+
+  const cfM = $('cfMonthlyC');
+  if(cfM && labels.length > 0) {
+    charts.cfMonthly = new Chart(cfM, {
+      type:'bar',
+      data:{ labels:labels, datasets:[
+        {label:'เข้า', data:inData,  backgroundColor:'rgba(63,185,80,.75)',  borderRadius:5},
+        {label:'ออก', data:outData, backgroundColor:'rgba(248,81,73,.75)',  borderRadius:5}
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{labels:{color:'#e6edf3',font:{size:11}}}, tooltip:{callbacks:{label:function(ctx){return ' '+fmtFull(ctx.raw);}}} },
+        scales:{
+          x:{ticks:{color:'#6e7681',font:{size:10}},grid:{display:false}},
+          y:{ticks:{color:'#6e7681',callback:function(v){return '฿'+(v/1000).toFixed(0)+'K';},font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}}
+        }
+      }
+    });
+  }
+
+  const cfC = $('cfCumulC');
+  if(cfC && labels.length > 0) {
+    charts.cfCumul = new Chart(cfC, {
+      type:'line',
+      data:{ labels:labels, datasets:[{
+        data:cumData, borderColor:'#39d0c8', backgroundColor:'rgba(57,208,200,.15)',
+        borderWidth:2, fill:true, tension:.3, pointRadius:4, pointBackgroundColor:'#39d0c8'
+      }]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(ctx){return ' '+fmtFull(ctx.raw);}}} },
+        scales:{
+          x:{ticks:{color:'#6e7681',font:{size:10}},grid:{display:false}},
+          y:{ticks:{color:'#6e7681',callback:function(v){return '฿'+(v/1000).toFixed(0)+'K';},font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}}
+        }
+      }
+    });
+  }
+
+  const sortedTxs = txs.slice().sort(function(a,b){return (b.date?b.date.getTime():0) - (a.date?a.date.getTime():0);}).slice(0, 15);
+  if(sortedTxs.length === 0) {
+    $('cfEmpty').style.display = 'block';
+    $('cfTxBody').innerHTML = '';
+  } else {
+    $('cfEmpty').style.display = 'none';
+    let running = balance;
+    const rowsHtml = sortedTxs.map(function(t){
+      const amtDisplay = t.type === 'เข้า'
+        ? '<span style="color:var(--green);">+' + fmtFull(t.amt) + '</span>'
+        : '<span style="color:var(--red);">-' + fmtFull(t.amt) + '</span>';
+      const typeBadge = t.type === 'เข้า'
+        ? '<span style="background:rgba(63,185,80,.15);color:var(--green);padding:2px 8px;border-radius:10px;font-size:11px;">เข้า</span>'
+        : '<span style="background:rgba(248,81,73,.15);color:var(--red);padding:2px 8px;border-radius:10px;font-size:11px;">ออก</span>';
+      const runningHtml = '<span style="color:var(--muted2);">' + fmtFull(running) + '</span>';
+      const row = '<tr><td>' + t.dateStr + '</td><td>' + typeBadge + '</td><td style="text-align:right;font-weight:500;">' + amtDisplay + '</td><td style="color:var(--muted);">' + (t.reason||'—') + '</td><td style="text-align:right;">' + runningHtml + '</td></tr>';
+      if(t.type === 'เข้า') running -= t.amt; else running += t.amt;
+      return row;
+    }).join('');
+    $('cfTxBody').innerHTML = rowsHtml;
+  }
 }
 
 // ══════════════════════════════════════════════
