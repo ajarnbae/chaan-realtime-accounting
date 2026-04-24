@@ -894,7 +894,7 @@ async function loadAll(silent=false) {
   $('reloadBtn').innerHTML='↻ รีเฟรช';
   $('tsText').textContent='อัปเดต: '+new Date().toLocaleTimeString('th-TH');
 
-  setTimeout(()=>{ $('loadingOverlay').style.display='none'; }, 400);
+  try { setTimeout(()=>{ if($('loadingOverlay')) $('loadingOverlay').style.display='none'; }, 400); } catch(e){}
 
   if(errors.length) {
     const b=$('errBanner');
@@ -905,7 +905,11 @@ async function loadAll(silent=false) {
   }
 
   isLoading = false;
-  renderAll();
+  try {
+    renderAll();
+  } catch(e) {
+    console.error('renderAll error:', e);
+  }
   if(!refreshTimer) scheduleRefresh();
 }
 
@@ -2102,10 +2106,10 @@ function renderWeddingMaster() {
   const sortedMonths = Object.keys(months).sort();
 
   const tabsEl = $('wmMonthTabs');
-  tabsEl.innerHTML = '<button class="wm-month-tab'+(wmCurrentMonth==='all'?' active':'')+'" onclick="wmSelectMonth('all',this)">ทั้งหมด</button>';
+  tabsEl.innerHTML = '<button class="wm-month-tab'+(wmCurrentMonth==='all'?' active':'')+'" onclick="wmSelectMonth(&quot;all&quot;,this)">ทั้งหมด</button>';
   sortedMonths.forEach(k=>{
     const active = wmCurrentMonth===k?' active':'';
-    tabsEl.innerHTML += '<button class="wm-month-tab'+active+'" onclick="wmSelectMonth(''+k+'',this)">'+months[k]+'</button>';
+    tabsEl.innerHTML += '<button class="wm-month-tab'+active+'" onclick="wmSelectMonth(&quot;'+k+'&quot;,this)">'+months[k]+'</button>';
   });
 
   // Render with current month filter
@@ -2159,7 +2163,7 @@ function wmRenderFiltered() {
     pipEmpty.style.display='none';
     pipBody.innerHTML = pipelineBookings.map(b=>{
       const sc = b.status.indexOf('เสร็จ')>=0?'var(--green)':b.status.indexOf('ยกเลิก')>=0?'var(--red)':'var(--yellow)';
-      return '<tr style="cursor:pointer;" onclick="wmOpenModal(''+encodeURIComponent(b.name)+'')">' +
+      return '<tr style="cursor:pointer;" onclick="wmOpenModal(encodeURIComponent(b.name))">' +
         '<td>'+b.dateStr+'</td>' +
         '<td><strong>'+b.name+'</strong><div style="font-size:10px;color:var(--muted2);">'+b.pkg+'</div></td>' +
         '<td style="text-align:right;">'+fmtFull(b.total)+'</td>' +
@@ -2195,7 +2199,7 @@ function wmRenderFiltered() {
     allBody.innerHTML = pageItems.map(b=>{
       const sc = b.status.indexOf('เสร็จ')>=0?'var(--green)':b.status.indexOf('ยกเลิก')>=0?'var(--red)':'var(--yellow)';
       const pc = b.profit>=0?'var(--green)':'var(--red)';
-      return '<tr style="cursor:pointer;" onclick="wmOpenModal(''+encodeURIComponent(b.name)+'')">' +
+      return '<tr style="cursor:pointer;" onclick="wmOpenModal(encodeURIComponent(b.name))">' +
         '<td>'+b.dateStr+'</td>' +
         '<td><strong>'+b.name+'</strong></td>' +
         '<td style="text-align:right;">'+fmtFull(b.total)+'</td>' +
@@ -2236,7 +2240,7 @@ function wmGoPage(p) {
 }
 
 function wmOpenModal(encodedName) {
-  const name = decodeURIComponent(encodedName);
+  const name = typeof encodedName === 'string' ? decodeURIComponent(encodedName) : encodedName;
   const b = wmEnriched.find(x=>x.name===name);
   if(!b) return;
 
