@@ -323,57 +323,105 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 <!-- ═══ WEDDING SECTION ═══ -->
 <div id="sec-wedding" class="wrap" style="display:none;">
-  <div class="nav-tabs">
-    <button class="ntab active" onclick="showTab('weddingSummary','wedding',this)">💍 สรุป Wedding</button>
-    <button class="ntab" onclick="showTab('weddingIn','wedding',this)">💰 รายได้ Wedding</button>
-    <button class="ntab" onclick="showTab('weddingOut','wedding',this)">💸 รายจ่าย Wedding</button>
+
+  <div id="wmNotConfigured" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;color:var(--muted);">
+    <div style="font-size:32px;margin-bottom:12px;">💍</div>
+    <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;">ยังไม่ได้เชื่อมชีท Wedding Master</div>
+    <div style="font-size:12px;line-height:1.8;margin-bottom:10px;">
+      เพิ่ม column <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--pink)">weddingMaster</code>, <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--pink)">wmBookings</code>, <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--pink)">wmPayments</code>, <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--pink)">wmExpenses</code> ใน Config Sheet
+    </div>
   </div>
 
-  <!-- TAB: WEDDING SUMMARY -->
-  <div id="wtab-weddingSummary">
+  <div id="wmContent" style="display:none;">
+
+    <!-- BIG KPI -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;text-align:center;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;">กำไรสุทธิรวม Wedding</div>
+      <div id="wm-profit" style="font-size:44px;font-weight:700;color:var(--pink);line-height:1.1;">—</div>
+      <div id="wm-profitSub" style="font-size:12px;color:var(--muted2);margin-top:6px;">—</div>
+    </div>
+
+    <!-- KPI METRICS -->
     <div class="metrics">
-      <div class="mc pk"><div class="mc-lbl">ยอดยกมา Wedding</div><div class="mc-val" id="w-carry">—</div></div>
-      <div class="mc g"><div class="mc-lbl">รายได้ Wedding</div><div class="mc-val" id="w-income">—</div></div>
-      <div class="mc r"><div class="mc-lbl">รายจ่าย Wedding</div><div class="mc-val" id="w-expense">—</div></div>
-      <div class="mc b"><div class="mc-lbl">ยอดเงินมัดจำ</div><div class="mc-val" id="w-deposit">—</div></div>
-      <div class="mc o"><div class="mc-lbl">ยอดเงินที่ต้องโอนไปกสิกร</div><div class="mc-val" id="w-transfer">—</div></div>
-      <div class="mc y"><div class="mc-lbl">ยอดคงเหลือ</div><div class="mc-val" id="w-balance">—</div></div>
+      <div class="mc g">
+        <div class="mc-lbl">รายรับรวม (ในกรุงศรี)</div>
+        <div class="mc-val" id="wm-income">—</div>
+      </div>
+      <div class="mc r">
+        <div class="mc-lbl">ค่าใช้จ่ายงานรวม</div>
+        <div class="mc-val" id="wm-expense">—</div>
+      </div>
+      <div class="mc y">
+        <div class="mc-lbl">ยังไม่โอนกสิกร</div>
+        <div class="mc-val" id="wm-pending">—</div>
+      </div>
+      <div class="mc b">
+        <div class="mc-lbl">จำนวนงานทั้งหมด</div>
+        <div class="mc-val" id="wm-bookings">—</div>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-title" style="color:var(--pink)">สรุป Wedding</div>
-      <div id="wSummaryRows"></div>
-    </div>
-    <div class="grid2" style="margin-top:12px;">
+
+    <!-- CASHFLOW THIS MONTH -->
+    <div class="grid2" style="margin-top:4px;">
       <div class="card">
-        <div class="card-title" style="color:var(--pink)">รายรับ vs รายจ่าย Wedding</div>
-        <div style="position:relative;height:200px;"><canvas id="wDonutC" role="img" aria-label="Wedding income expense"></canvas></div>
+        <div class="card-title" style="color:var(--green)">💰 เงินเข้าเดือนนี้</div>
+        <div style="padding:14px 0;">
+          <div id="wm-monthIn" style="font-size:28px;font-weight:700;color:var(--green);">—</div>
+          <div id="wm-monthInCount" style="font-size:12px;color:var(--muted2);margin-top:4px;">—</div>
+        </div>
       </div>
       <div class="card">
-        <div class="card-title" style="color:var(--pink)">หมายเหตุ</div>
-        <div style="padding:12px 0;font-size:13px;color:var(--muted);line-height:1.8;">
-          รายได้จาก Wedding จะถูกโอนเข้าบัญชีกสิกรหลังหักค่าใช้จ่าย<br>
-          ยอดนี้สะท้อนอยู่ใน <strong style="color:var(--pink)">กำไร Wedding</strong> ในหน้า กสิกร รายรับ
+        <div class="card-title" style="color:var(--red)">💸 เงินออกเดือนนี้</div>
+        <div style="padding:14px 0;">
+          <div id="wm-monthOut" style="font-size:28px;font-weight:700;color:var(--red);">—</div>
+          <div id="wm-monthOutCount" style="font-size:12px;color:var(--muted2);margin-top:4px;">—</div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- TAB: WEDDING IN -->
-  <div id="wtab-weddingIn" style="display:none;">
-    <div class="card">
-      <div class="card-title" style="color:var(--green)">รายได้ Wedding รายวัน</div>
-      <div class="tbl-wrap"><table><thead><tr id="wInHead"></tr></thead><tbody id="wInBody"></tbody></table></div>
-      <div id="wInEmpty" style="text-align:center;padding:30px;color:var(--muted);font-size:13px;display:none;">ยังไม่มีข้อมูลรายได้ Wedding ในเดือนนี้</div>
+    <!-- PIPELINE -->
+    <div class="card" style="margin-top:12px;">
+      <div class="card-title" style="color:var(--pink)">📅 Pipeline — งานที่กำลังจะมาถึง (90 วัน)</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:80px;">วันจัด</th>
+            <th>ชื่อลูกค้า</th>
+            <th style="width:110px;text-align:right;">ราคารวม</th>
+            <th style="width:110px;text-align:right;">รับมาแล้ว</th>
+            <th style="width:110px;text-align:right;">คงค้าง</th>
+            <th style="width:110px;">สถานะ</th>
+          </tr></thead>
+          <tbody id="wmPipelineBody"></tbody>
+        </table>
+      </div>
+      <div id="wmPipelineEmpty" style="text-align:center;padding:24px;color:var(--muted);font-size:13px;display:none;">
+        ไม่มีงานในอีก 90 วันข้างหน้า
+      </div>
     </div>
-  </div>
 
-  <!-- TAB: WEDDING OUT -->
-  <div id="wtab-weddingOut" style="display:none;">
-    <div class="card">
-      <div class="card-title" style="color:var(--red)">รายจ่าย Wedding รายวัน</div>
-      <div class="tbl-wrap"><table><thead><tr id="wOutHead"></tr></thead><tbody id="wOutBody"></tbody></table></div>
-      <div id="wOutEmpty" style="text-align:center;padding:30px;color:var(--muted);font-size:13px;display:none;">ยังไม่มีข้อมูลรายจ่าย Wedding ในเดือนนี้</div>
+    <!-- ALL BOOKINGS -->
+    <div class="card" style="margin-top:12px;">
+      <div class="card-title" style="color:var(--blue)">📋 ทุกงาน — สถานะทางการเงินครบ</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:80px;">วันจัด</th>
+            <th>ชื่อลูกค้า</th>
+            <th style="width:100px;text-align:right;">ราคารวม</th>
+            <th style="width:100px;text-align:right;">รับมา</th>
+            <th style="width:100px;text-align:right;">ค่าใช้จ่าย</th>
+            <th style="width:100px;text-align:right;">กำไรสุทธิ</th>
+            <th style="width:110px;">สถานะ</th>
+          </tr></thead>
+          <tbody id="wmAllBody"></tbody>
+        </table>
+      </div>
+      <div id="wmAllEmpty" style="text-align:center;padding:24px;color:var(--muted);font-size:13px;display:none;">
+        ยังไม่มีงาน
+      </div>
     </div>
+
   </div>
 
 </div><!-- /sec-wedding -->
@@ -599,6 +647,10 @@ const CONFIG_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT527_JQ
 let CENTRAL_FUND_SHEET_ID = '';
 let centralFundData = null;
 
+// Wedding Master Sheet — ชีทเดียว 3 tabs: งาน / การชำระเงิน / ค่าใช้จ่าย
+let WEDDING_MASTER = { sheetId:'', gBookings:'', gPayments:'', gExpenses:'' };
+let weddingMasterData = { bookings:null, payments:null, expenses:null };
+
 // Fallback hardcode (ใช้ถ้า Config Sheet โหลดไม่ได้)
 const MONTHS_FALLBACK = [
   {
@@ -653,7 +705,9 @@ async function loadConfigSheet() {
           iKIn=gi('kbankIn'), iKOut=gi('kbankOut'),
           iED=gi('expDetail'), iES=gi('expSum'),
           iWS=gi('weddingSum'), iWI=gi('weddingIn'), iWO=gi('weddingOut'),
-          iCF=gi('centralFund');
+          iCF=gi('centralFund'),
+          iWM=gi('weddingMaster'),
+          iWMB=gi('wmBookings'), iWMP=gi('wmPayments'), iWMX=gi('wmExpenses');
 
     const parsed = rows.slice(1)
       .filter(r => r[iLabel]&&r[iSid])
@@ -669,10 +723,21 @@ async function loadConfigSheet() {
         }
       }));
 
-    // Extract centralFund sheetId from any row that has it
+    // Extract centralFund sheetId
     if(iCF >= 0) {
       const cfRow = rows.slice(1).find(r => r[iCF] && r[iCF].trim());
       if(cfRow) CENTRAL_FUND_SHEET_ID = cfRow[iCF].trim();
+    }
+
+    // Extract Wedding Master sheetId + GIDs (ใช้ชีทกลางเดียว)
+    if(iWM >= 0) {
+      const wmRow = rows.slice(1).find(r => r[iWM] && r[iWM].trim());
+      if(wmRow) {
+        WEDDING_MASTER.sheetId  = wmRow[iWM].trim();
+        WEDDING_MASTER.gBookings= iWMB>=0 ? (wmRow[iWMB]||'').trim() : '';
+        WEDDING_MASTER.gPayments= iWMP>=0 ? (wmRow[iWMP]||'').trim() : '';
+        WEDDING_MASTER.gExpenses= iWMX>=0 ? (wmRow[iWMX]||'').trim() : '';
+      }
     }
 
     if(parsed.length > 0) {
@@ -871,9 +936,7 @@ function renderAll() {
   if(D.kbankOut)   renderKbankOut(D.kbankOut);
   if(D.expDetail)  renderExpDetail(D.expDetail);
   if(D.expSum)     renderExpSum(D.expSum);
-  if(D.weddingSum) renderWeddingSummary(D.weddingSum);
-  if(D.weddingIn)  renderWeddingIn(D.weddingIn);
-  if(D.weddingOut) renderWeddingOut(D.weddingOut);
+  // Wedding now loaded separately via loadWeddingMaster()
 }
 
 // ══════════════════════════════════════════════
@@ -1663,6 +1726,7 @@ function switchSection(sec, btn) {
   if(sec==='growth') renderGrowth();
   if(sec==='months') renderMMList();
   if(sec==='central') loadCentralFund();
+  if(sec==='wedding') loadWeddingMaster();
 }
 
 // ══════════════════════════════════════════════
@@ -1852,6 +1916,252 @@ function renderCentralFund(rows) {
       return row;
     }).join('');
     $('cfTxBody').innerHTML = rowsHtml;
+  }
+}
+
+// ══════════════════════════════════════════════
+// WEDDING MASTER — load & render
+// ══════════════════════════════════════════════
+async function loadWeddingMaster(force) {
+  const container = document.getElementById('wmContent');
+  const notCfg    = document.getElementById('wmNotConfigured');
+
+  if(!WEDDING_MASTER.sheetId) {
+    container.style.display = 'none';
+    notCfg.style.display = 'block';
+    return;
+  }
+
+  notCfg.style.display = 'none';
+  container.style.display = 'block';
+
+  if(weddingMasterData.bookings && !force) {
+    renderWeddingMaster();
+    return;
+  }
+
+  const cacheBust = Date.now();
+  const base = 'https://docs.google.com/spreadsheets/d/e/' + WEDDING_MASTER.sheetId + '/pub?output=csv';
+
+  // Build URLs — if gid empty, skip (fetch first tab only fallback)
+  const urls = {
+    bookings: WEDDING_MASTER.gBookings ? base + '&gid=' + WEDDING_MASTER.gBookings + '&t=' + cacheBust : null,
+    payments: WEDDING_MASTER.gPayments ? base + '&gid=' + WEDDING_MASTER.gPayments + '&t=' + cacheBust : null,
+    expenses: WEDDING_MASTER.gExpenses ? base + '&gid=' + WEDDING_MASTER.gExpenses + '&t=' + cacheBust : null,
+  };
+
+  console.log('WM: fetching bookings/payments/expenses');
+
+  const results = await Promise.all([
+    urls.bookings ? fetchCSVWithTimeout(urls.bookings, 10000) : Promise.resolve(null),
+    urls.payments ? fetchCSVWithTimeout(urls.payments, 10000) : Promise.resolve(null),
+    urls.expenses ? fetchCSVWithTimeout(urls.expenses, 10000) : Promise.resolve(null),
+  ]);
+
+  weddingMasterData.bookings = results[0] ? parseCSV(results[0]) : null;
+  weddingMasterData.payments = results[1] ? parseCSV(results[1]) : null;
+  weddingMasterData.expenses = results[2] ? parseCSV(results[2]) : null;
+
+  renderWeddingMaster();
+}
+
+function renderWeddingMaster() {
+  const B = weddingMasterData.bookings || [];
+  const P = weddingMasterData.payments || [];
+  const E = weddingMasterData.expenses || [];
+
+  // ── Find headers in bookings ──
+  let bHdr = -1;
+  for(let i=0;i<Math.min(10,B.length);i++){
+    const row = (B[i]||[]).join('|');
+    if(row.indexOf('ชื่อลูกค้า') >= 0 || row.indexOf('วันจัดงาน') >= 0) { bHdr = i; break; }
+  }
+  if(bHdr < 0) bHdr = 2;
+
+  const bHeaders = B[bHdr] || [];
+  const bFind = kw => bHeaders.findIndex(h => (h||'').indexOf(kw) >= 0);
+  const bNameI    = bFind('ชื่อลูกค้า');
+  const bDateI    = bFind('วันจัดงาน');
+  const bPkgI     = bFind('แพ็คเกจ');
+  const bTotalI   = bFind('ราคารวมจริง');
+  const bStatusI  = bFind('สถานะการชำระ');
+
+  // Parse bookings data rows
+  const bookings = [];
+  for(let i=bHdr+1; i<B.length; i++){
+    const row = B[i] || [];
+    const name = (row[bNameI]||'').trim();
+    if(!name) continue;
+    const dateStr = (row[bDateI]||'').trim();
+    let date = null;
+    const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    if(m) {
+      let dd=parseInt(m[1]), mm=parseInt(m[2]), yy=parseInt(m[3]);
+      if(yy<100) yy+=2000;
+      if(yy>2500) yy-=543;
+      date = new Date(yy, mm-1, dd);
+    }
+    bookings.push({
+      name:name, dateStr:dateStr, date:date,
+      pkg:(row[bPkgI]||'').trim(),
+      total:parseNum(row[bTotalI]),
+      status:(row[bStatusI]||'').trim(),
+    });
+  }
+
+  // ── Parse payments ──
+  let pHdr = -1;
+  for(let i=0;i<Math.min(10,P.length);i++){
+    const row = (P[i]||[]).join('|');
+    if(row.indexOf('วันที่รับเงิน') >= 0 || row.indexOf('จำนวนที่รับ') >= 0) { pHdr = i; break; }
+  }
+  if(pHdr < 0) pHdr = 2;
+  const pHeaders = P[pHdr] || [];
+  const pFind = kw => pHeaders.findIndex(h => (h||'').indexOf(kw) >= 0);
+  const pDateI = pFind('วันที่รับ');
+  const pNameI = pFind('ชื่อลูกค้า');
+  const pAmtI  = pFind('จำนวนที่รับ');
+  const pTypeI = pFind('ประเภทการจ่าย');
+
+  const payments = [];
+  for(let i=pHdr+1; i<P.length; i++){
+    const row = P[i] || [];
+    const name = (row[pNameI]||'').trim();
+    const amt = parseNum(row[pAmtI]);
+    if(!name || amt === 0) continue;
+    const dateStr = (row[pDateI]||'').trim();
+    let date = null;
+    const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    if(m) {
+      let dd=parseInt(m[1]), mm=parseInt(m[2]), yy=parseInt(m[3]);
+      if(yy<100) yy+=2000;
+      if(yy>2500) yy-=543;
+      date = new Date(yy, mm-1, dd);
+    }
+    payments.push({ name:name, dateStr:dateStr, date:date, amt:amt, type:(row[pTypeI]||'').trim() });
+  }
+
+  // ── Parse expenses ──
+  let eHdr = -1;
+  for(let i=0;i<Math.min(10,E.length);i++){
+    const row = (E[i]||[]).join('|');
+    if(row.indexOf('ชื่องาน') >= 0 || row.indexOf('ลูกค้า') >= 0) { eHdr = i; break; }
+  }
+  if(eHdr < 0) eHdr = 3; // expense sheet has extra group header row
+  const eHeaders = E[eHdr] || [];
+  const eFind = kw => eHeaders.findIndex(h => (h||'').indexOf(kw) >= 0);
+  const eNameI = eFind('ชื่องาน') >= 0 ? eFind('ชื่องาน') : eFind('ลูกค้า');
+  const eDateI = eFind('วันจัดงาน');
+  const eTotalI = eFind('รวมค่าใช้จ่าย');
+
+  const expenses = [];
+  for(let i=eHdr+1; i<E.length; i++){
+    const row = E[i] || [];
+    const name = (row[eNameI]||'').trim();
+    const total = parseNum(row[eTotalI]);
+    if(!name) continue;
+    const dateStr = (row[eDateI]||'').trim();
+    let date = null;
+    const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    if(m) {
+      let dd=parseInt(m[1]), mm=parseInt(m[2]), yy=parseInt(m[3]);
+      if(yy<100) yy+=2000;
+      if(yy>2500) yy-=543;
+      date = new Date(yy, mm-1, dd);
+    }
+    expenses.push({ name:name, date:date, total:total });
+  }
+
+  // ── Calculate per-booking stats ──
+  const getRecvByName = (name) => payments.filter(p => p.name === name).reduce((s,p)=>s+p.amt, 0);
+  const getExpByName  = (name) => expenses.filter(e => e.name === name).reduce((s,e)=>s+e.total, 0);
+
+  const enriched = bookings.map(b => {
+    const received = getRecvByName(b.name);
+    const expense  = getExpByName(b.name);
+    const outstanding = b.total - received;
+    const profit = received - expense;
+    return { ...b, received, expense, outstanding, profit };
+  });
+
+  // ── Totals ──
+  const totalIncome = payments.reduce((s,p)=>s+p.amt, 0);
+  const totalExpense = expenses.reduce((s,e)=>s+e.total, 0);
+  const totalProfit = totalIncome - totalExpense;
+  const totalOutstanding = enriched.reduce((s,b)=>s+Math.max(0,b.outstanding), 0);
+
+  // ── This month cashflow ──
+  const now = new Date();
+  const thisMonth = now.getMonth(), thisYear = now.getFullYear();
+  const monthPayments = payments.filter(p => p.date && p.date.getMonth()===thisMonth && p.date.getFullYear()===thisYear);
+  const monthExpenses = expenses.filter(e => e.date && e.date.getMonth()===thisMonth && e.date.getFullYear()===thisYear);
+  const monthIn  = monthPayments.reduce((s,p)=>s+p.amt, 0);
+  const monthOut = monthExpenses.reduce((s,e)=>s+e.total, 0);
+
+  // ── Update KPIs ──
+  $('wm-profit').textContent = fmtFull(totalProfit);
+  $('wm-profit').style.color = totalProfit >= 0 ? 'var(--pink)' : 'var(--red)';
+  $('wm-profitSub').textContent = enriched.length + ' งาน / รวมมูลค่า ' + fmtFull(enriched.reduce((s,b)=>s+b.total, 0));
+  $('wm-income').textContent  = fmtShort(totalIncome);
+  $('wm-expense').textContent = fmtShort(totalExpense);
+  $('wm-pending').textContent = fmtShort(totalOutstanding);
+  $('wm-bookings').textContent = String(enriched.length);
+  $('wm-monthIn').textContent = fmtShort(monthIn);
+  $('wm-monthInCount').textContent = monthPayments.length + ' รายการรับเงิน';
+  $('wm-monthOut').textContent = fmtShort(monthOut);
+  $('wm-monthOutCount').textContent = monthExpenses.length + ' รายการจ่าย';
+
+  // ── Pipeline (งาน 90 วันข้างหน้า) ──
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in90Days = new Date(today); in90Days.setDate(in90Days.getDate() + 90);
+  const pipeline = enriched
+    .filter(b => b.date && b.date >= today && b.date <= in90Days)
+    .sort((a,b) => a.date.getTime() - b.date.getTime());
+
+  const pipBody = $('wmPipelineBody');
+  const pipEmpty = $('wmPipelineEmpty');
+  if(pipeline.length === 0) {
+    pipBody.innerHTML = '';
+    pipEmpty.style.display = 'block';
+  } else {
+    pipEmpty.style.display = 'none';
+    pipBody.innerHTML = pipeline.map(b => {
+      const statusColor = b.status.indexOf('เสร็จ') >= 0 ? 'var(--green)' :
+                          b.status.indexOf('ยกเลิก') >= 0 ? 'var(--red)' : 'var(--yellow)';
+      return '<tr>' +
+        '<td>' + b.dateStr + '</td>' +
+        '<td><strong>' + b.name + '</strong><div style="font-size:10px;color:var(--muted2);">' + b.pkg + '</div></td>' +
+        '<td style="text-align:right;">' + fmtFull(b.total) + '</td>' +
+        '<td style="text-align:right;color:var(--green);">' + fmtFull(b.received) + '</td>' +
+        '<td style="text-align:right;color:var(--red);">' + fmtFull(b.outstanding) + '</td>' +
+        '<td><span style="color:' + statusColor + ';font-size:11px;">' + (b.status||'—') + '</span></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  // ── All bookings ──
+  const allBody = $('wmAllBody');
+  const allEmpty = $('wmAllEmpty');
+  if(enriched.length === 0) {
+    allBody.innerHTML = '';
+    allEmpty.style.display = 'block';
+  } else {
+    allEmpty.style.display = 'none';
+    const sorted = [...enriched].sort((a,b) => (b.date?.getTime()||0) - (a.date?.getTime()||0));
+    allBody.innerHTML = sorted.map(b => {
+      const statusColor = b.status.indexOf('เสร็จ') >= 0 ? 'var(--green)' :
+                          b.status.indexOf('ยกเลิก') >= 0 ? 'var(--red)' : 'var(--yellow)';
+      const profitColor = b.profit >= 0 ? 'var(--green)' : 'var(--red)';
+      return '<tr>' +
+        '<td>' + b.dateStr + '</td>' +
+        '<td><strong>' + b.name + '</strong></td>' +
+        '<td style="text-align:right;">' + fmtFull(b.total) + '</td>' +
+        '<td style="text-align:right;color:var(--green);">' + fmtFull(b.received) + '</td>' +
+        '<td style="text-align:right;color:var(--red);">' + fmtFull(b.expense) + '</td>' +
+        '<td style="text-align:right;color:' + profitColor + ';font-weight:500;">' + fmtFull(b.profit) + '</td>' +
+        '<td><span style="color:' + statusColor + ';font-size:11px;">' + (b.status||'—') + '</span></td>' +
+        '</tr>';
+    }).join('');
   }
 }
 
