@@ -116,6 +116,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .leg{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);}
 .leg-sq{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
 
+/* WEDDING-EXTRA-CSS-ANCHOR */
 /* INFO ROWS */
 .info-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);}
 .info-row:last-child{border-bottom:none;}
@@ -327,67 +328,57 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <div id="wmNotConfigured" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;color:var(--muted);">
     <div style="font-size:32px;margin-bottom:12px;">💍</div>
     <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;">ยังไม่ได้เชื่อมชีท Wedding Master</div>
-    <div style="font-size:12px;line-height:1.8;margin-bottom:10px;">
-      เพิ่ม column <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--pink)">weddingMaster</code>, <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--pink)">wmBookings</code>, <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--pink)">wmPayments</code>, <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--pink)">wmExpenses</code> ใน Config Sheet
+    <div style="font-size:12px;line-height:1.8;">
+      เพิ่ม <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--pink)">weddingMaster</code>,
+      <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--pink)">wmBookings</code>,
+      <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--pink)">wmPayments</code>,
+      <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--pink)">wmExpenses</code> ใน Config Sheet
     </div>
   </div>
 
   <div id="wmContent" style="display:none;">
 
-    <!-- BIG KPI -->
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;text-align:center;">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;">กำไรสุทธิรวม Wedding</div>
-      <div id="wm-profit" style="font-size:44px;font-weight:700;color:var(--pink);line-height:1.1;">—</div>
-      <div id="wm-profitSub" style="font-size:12px;color:var(--muted2);margin-top:6px;">—</div>
-    </div>
-
-    <!-- KPI METRICS -->
+    <!-- OVERALL METRICS (all-time) -->
     <div class="metrics">
       <div class="mc g">
-        <div class="mc-lbl">รายรับรวม (ในกรุงศรี)</div>
+        <div class="mc-lbl">รายรับรวมทั้งหมด</div>
         <div class="mc-val" id="wm-income">—</div>
       </div>
       <div class="mc r">
-        <div class="mc-lbl">ค่าใช้จ่ายงานรวม</div>
+        <div class="mc-lbl">ค่าใช้จ่ายรวมทั้งหมด</div>
         <div class="mc-val" id="wm-expense">—</div>
+      </div>
+      <div class="mc pk">
+        <div class="mc-lbl">กำไรสุทธิรวม</div>
+        <div class="mc-val" id="wm-profit">—</div>
       </div>
       <div class="mc y">
         <div class="mc-lbl">ยังไม่โอนกสิกร</div>
         <div class="mc-val" id="wm-pending">—</div>
       </div>
       <div class="mc b">
-        <div class="mc-lbl">จำนวนงานทั้งหมด</div>
+        <div class="mc-lbl">งานทั้งหมด</div>
         <div class="mc-val" id="wm-bookings">—</div>
       </div>
     </div>
 
-    <!-- CASHFLOW THIS MONTH -->
-    <div class="grid2" style="margin-top:4px;">
-      <div class="card">
-        <div class="card-title" style="color:var(--green)">💰 เงินเข้าเดือนนี้</div>
-        <div style="padding:14px 0;">
-          <div id="wm-monthIn" style="font-size:28px;font-weight:700;color:var(--green);">—</div>
-          <div id="wm-monthInCount" style="font-size:12px;color:var(--muted2);margin-top:4px;">—</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title" style="color:var(--red)">💸 เงินออกเดือนนี้</div>
-        <div style="padding:14px 0;">
-          <div id="wm-monthOut" style="font-size:28px;font-weight:700;color:var(--red);">—</div>
-          <div id="wm-monthOutCount" style="font-size:12px;color:var(--muted2);margin-top:4px;">—</div>
-        </div>
+    <!-- MONTH SELECTOR -->
+    <div style="margin-top:16px;">
+      <div class="wm-section-label">เลือกดูข้อมูลตามเดือน:</div>
+      <div class="wm-month-tabs" id="wmMonthTabs">
+        <button class="wm-month-tab active" onclick="wmSelectMonth('all',this)">ทั้งหมด</button>
       </div>
     </div>
 
     <!-- PIPELINE -->
     <div class="card" style="margin-top:12px;">
-      <div class="card-title" style="color:var(--pink)">📅 Pipeline — งานที่กำลังจะมาถึง (90 วัน)</div>
+      <div class="card-title" style="color:var(--pink)" id="wmPipelineTitle">📅 Pipeline — งานเดือนนี้ + 2 เดือนถัดไป</div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
-            <th style="width:80px;">วันจัด</th>
+            <th style="width:110px;">วันจัดงาน</th>
             <th>ชื่อลูกค้า</th>
-            <th style="width:110px;text-align:right;">ราคารวม</th>
+            <th style="width:120px;text-align:right;">ราคารวม</th>
             <th style="width:110px;text-align:right;">รับมาแล้ว</th>
             <th style="width:110px;text-align:right;">คงค้าง</th>
             <th style="width:110px;">สถานะ</th>
@@ -396,32 +387,44 @@ tr:hover td{background:rgba(255,255,255,.02);}
         </table>
       </div>
       <div id="wmPipelineEmpty" style="text-align:center;padding:24px;color:var(--muted);font-size:13px;display:none;">
-        ไม่มีงานในอีก 90 วันข้างหน้า
+        ไม่มีงานในช่วงที่เลือก
       </div>
     </div>
 
-    <!-- ALL BOOKINGS -->
+    <!-- ALL BOOKINGS WITH PAGINATION -->
     <div class="card" style="margin-top:12px;">
-      <div class="card-title" style="color:var(--blue)">📋 ทุกงาน — สถานะทางการเงินครบ</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div class="card-title" style="color:var(--blue);margin-bottom:0;" id="wmAllTitle">📋 ทุกงาน</div>
+        <div id="wmPageInfo" style="font-size:11px;color:var(--muted);">—</div>
+      </div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
-            <th style="width:80px;">วันจัด</th>
+            <th style="width:110px;">วันจัดงาน</th>
             <th>ชื่อลูกค้า</th>
-            <th style="width:100px;text-align:right;">ราคารวม</th>
-            <th style="width:100px;text-align:right;">รับมา</th>
-            <th style="width:100px;text-align:right;">ค่าใช้จ่าย</th>
-            <th style="width:100px;text-align:right;">กำไรสุทธิ</th>
-            <th style="width:110px;">สถานะ</th>
+            <th style="width:120px;text-align:right;">ราคารวม</th>
+            <th style="width:110px;text-align:right;">รับมา</th>
+            <th style="width:110px;text-align:right;">ค่าใช้จ่าย</th>
+            <th style="width:110px;text-align:right;">กำไรสุทธิ</th>
+            <th style="width:100px;">สถานะ</th>
           </tr></thead>
           <tbody id="wmAllBody"></tbody>
         </table>
       </div>
       <div id="wmAllEmpty" style="text-align:center;padding:24px;color:var(--muted);font-size:13px;display:none;">
-        ยังไม่มีงาน
+        ไม่มีงาน
       </div>
+      <div class="pagination" id="wmPagination"></div>
     </div>
 
+  </div>
+
+  <!-- MODAL: รายละเอียดงาน -->
+  <div id="wmModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeWmModal()">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeWmModal()">✕</button>
+      <div id="wmModalContent"></div>
+    </div>
   </div>
 
 </div><!-- /sec-wedding -->
@@ -1723,6 +1726,9 @@ function switchSection(sec, btn) {
   $('sec-months').style.display     = sec==='months'?'block':'none';
   document.querySelectorAll('.sec-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  // Show/hide main month dropdown — only for restaurant section
+  const mSel = $('monthSelect');
+  if(mSel) mSel.parentElement.style.display = sec==='restaurant'||sec==='growth'||sec==='months'?'':'none';
   if(sec==='growth') renderGrowth();
   if(sec==='months') renderMMList();
   if(sec==='central') loadCentralFund();
@@ -1920,8 +1926,14 @@ function renderCentralFund(rows) {
 }
 
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
 // WEDDING MASTER — load & render
 // ══════════════════════════════════════════════
+let wmEnriched = [];      // all enriched bookings
+let wmCurrentMonth = 'all'; // 'all' or 'YYYY-MM'
+let wmPage = 1;
+const WM_PAGE_SIZE = 10;
+
 async function loadWeddingMaster(force) {
   const container = document.getElementById('wmContent');
   const notCfg    = document.getElementById('wmNotConfigured');
@@ -1931,7 +1943,6 @@ async function loadWeddingMaster(force) {
     notCfg.style.display = 'block';
     return;
   }
-
   notCfg.style.display = 'none';
   container.style.display = 'block';
 
@@ -1940,29 +1951,52 @@ async function loadWeddingMaster(force) {
     return;
   }
 
-  const cacheBust = Date.now();
+  const t = Date.now();
   const base = 'https://docs.google.com/spreadsheets/d/e/' + WEDDING_MASTER.sheetId + '/pub?output=csv';
-
-  // Build URLs — if gid empty, skip (fetch first tab only fallback)
   const urls = {
-    bookings: WEDDING_MASTER.gBookings ? base + '&gid=' + WEDDING_MASTER.gBookings + '&t=' + cacheBust : null,
-    payments: WEDDING_MASTER.gPayments ? base + '&gid=' + WEDDING_MASTER.gPayments + '&t=' + cacheBust : null,
-    expenses: WEDDING_MASTER.gExpenses ? base + '&gid=' + WEDDING_MASTER.gExpenses + '&t=' + cacheBust : null,
+    bookings: WEDDING_MASTER.gBookings ? base+'&gid='+WEDDING_MASTER.gBookings+'&t='+t : null,
+    payments: WEDDING_MASTER.gPayments ? base+'&gid='+WEDDING_MASTER.gPayments+'&t='+t : null,
+    expenses: WEDDING_MASTER.gExpenses ? base+'&gid='+WEDDING_MASTER.gExpenses+'&t='+t : null,
   };
 
-  console.log('WM: fetching bookings/payments/expenses');
-
-  const results = await Promise.all([
-    urls.bookings ? fetchCSVWithTimeout(urls.bookings, 10000) : Promise.resolve(null),
-    urls.payments ? fetchCSVWithTimeout(urls.payments, 10000) : Promise.resolve(null),
-    urls.expenses ? fetchCSVWithTimeout(urls.expenses, 10000) : Promise.resolve(null),
+  const [csvB, csvP, csvE] = await Promise.all([
+    urls.bookings ? fetchCSVWithTimeout(urls.bookings,10000) : Promise.resolve(null),
+    urls.payments ? fetchCSVWithTimeout(urls.payments,10000) : Promise.resolve(null),
+    urls.expenses ? fetchCSVWithTimeout(urls.expenses,10000) : Promise.resolve(null),
   ]);
 
-  weddingMasterData.bookings = results[0] ? parseCSV(results[0]) : null;
-  weddingMasterData.payments = results[1] ? parseCSV(results[1]) : null;
-  weddingMasterData.expenses = results[2] ? parseCSV(results[2]) : null;
+  weddingMasterData.bookings = csvB ? parseCSV(csvB) : null;
+  weddingMasterData.payments = csvP ? parseCSV(csvP) : null;
+  weddingMasterData.expenses = csvE ? parseCSV(csvE) : null;
 
   renderWeddingMaster();
+}
+
+function parseDate(s) {
+  if(!s) return null;
+  const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(!m) return null;
+  let dd=parseInt(m[1]),mm=parseInt(m[2]),yy=parseInt(m[3]);
+  if(yy<100) yy+=2000;
+  if(yy>2500) yy-=543;
+  return new Date(yy,mm-1,dd);
+}
+
+function fmtDateFull(d) {
+  if(!d) return '—';
+  const thaiMonths=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = thaiMonths[d.getMonth()];
+  const yy = d.getFullYear()+543;
+  return dd+' '+mm+' '+yy;
+}
+
+function findHdr(rows, ...keywords) {
+  for(let i=0;i<Math.min(10,rows.length);i++){
+    const j = (rows[i]||[]).join('|');
+    if(keywords.every(kw => j.indexOf(kw) >= 0)) return i;
+  }
+  return Math.min(2, rows.length-1);
 }
 
 function renderWeddingMaster() {
@@ -1970,199 +2004,305 @@ function renderWeddingMaster() {
   const P = weddingMasterData.payments || [];
   const E = weddingMasterData.expenses || [];
 
-  // ── Find headers in bookings ──
-  let bHdr = -1;
-  for(let i=0;i<Math.min(10,B.length);i++){
-    const row = (B[i]||[]).join('|');
-    if(row.indexOf('ชื่อลูกค้า') >= 0 || row.indexOf('วันจัดงาน') >= 0) { bHdr = i; break; }
-  }
-  if(bHdr < 0) bHdr = 2;
+  // ── Parse bookings ──
+  const bHdrIdx = findHdr(B,'ชื่อลูกค้า');
+  const bH = B[bHdrIdx]||[];
+  const bF = kw => bH.findIndex(h=>(h||'').indexOf(kw)>=0);
+  const bNameI=bF('ชื่อลูกค้า'), bDateI=bF('วันจัดงาน'), bPkgI=bF('แพ็คเกจ'),
+        bTotalI=bF('ราคารวมจริง'), bStatusI=bF('สถานะการชำระ');
 
-  const bHeaders = B[bHdr] || [];
-  const bFind = kw => bHeaders.findIndex(h => (h||'').indexOf(kw) >= 0);
-  const bNameI    = bFind('ชื่อลูกค้า');
-  const bDateI    = bFind('วันจัดงาน');
-  const bPkgI     = bFind('แพ็คเกจ');
-  const bTotalI   = bFind('ราคารวมจริง');
-  const bStatusI  = bFind('สถานะการชำระ');
-
-  // Parse bookings data rows
   const bookings = [];
-  for(let i=bHdr+1; i<B.length; i++){
-    const row = B[i] || [];
-    const name = (row[bNameI]||'').trim();
+  for(let i=bHdrIdx+1;i<B.length;i++){
+    const row=B[i]||[];
+    const name=(row[bNameI]||'').trim();
     if(!name) continue;
-    const dateStr = (row[bDateI]||'').trim();
-    let date = null;
-    const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-    if(m) {
-      let dd=parseInt(m[1]), mm=parseInt(m[2]), yy=parseInt(m[3]);
-      if(yy<100) yy+=2000;
-      if(yy>2500) yy-=543;
-      date = new Date(yy, mm-1, dd);
-    }
+    const date = parseDate((row[bDateI]||'').trim());
     bookings.push({
-      name:name, dateStr:dateStr, date:date,
-      pkg:(row[bPkgI]||'').trim(),
-      total:parseNum(row[bTotalI]),
+      name, date, dateStr:date?fmtDateFull(date):(row[bDateI]||'').trim(),
+      pkg:(row[bPkgI]||'').trim(), total:parseNum(row[bTotalI]),
       status:(row[bStatusI]||'').trim(),
     });
   }
 
   // ── Parse payments ──
-  let pHdr = -1;
-  for(let i=0;i<Math.min(10,P.length);i++){
-    const row = (P[i]||[]).join('|');
-    if(row.indexOf('วันที่รับเงิน') >= 0 || row.indexOf('จำนวนที่รับ') >= 0) { pHdr = i; break; }
-  }
-  if(pHdr < 0) pHdr = 2;
-  const pHeaders = P[pHdr] || [];
-  const pFind = kw => pHeaders.findIndex(h => (h||'').indexOf(kw) >= 0);
-  const pDateI = pFind('วันที่รับ');
-  const pNameI = pFind('ชื่อลูกค้า');
-  const pAmtI  = pFind('จำนวนที่รับ');
-  const pTypeI = pFind('ประเภทการจ่าย');
+  const pHdrIdx = findHdr(P,'จำนวนที่รับ');
+  const pH = P[pHdrIdx]||[];
+  const pF = kw => pH.findIndex(h=>(h||'').indexOf(kw)>=0);
+  const pDateI=pF('วันที่รับ'), pNameI=pF('ชื่อลูกค้า'),
+        pAmtI=pF('จำนวนที่รับ'), pTypeI=pF('ประเภทการจ่าย');
 
   const payments = [];
-  for(let i=pHdr+1; i<P.length; i++){
-    const row = P[i] || [];
-    const name = (row[pNameI]||'').trim();
-    const amt = parseNum(row[pAmtI]);
-    if(!name || amt === 0) continue;
-    const dateStr = (row[pDateI]||'').trim();
-    let date = null;
-    const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-    if(m) {
-      let dd=parseInt(m[1]), mm=parseInt(m[2]), yy=parseInt(m[3]);
-      if(yy<100) yy+=2000;
-      if(yy>2500) yy-=543;
-      date = new Date(yy, mm-1, dd);
-    }
-    payments.push({ name:name, dateStr:dateStr, date:date, amt:amt, type:(row[pTypeI]||'').trim() });
+  for(let i=pHdrIdx+1;i<P.length;i++){
+    const row=P[i]||[];
+    const name=(row[pNameI]||'').trim();
+    const amt=parseNum(row[pAmtI]);
+    if(!name||amt===0) continue;
+    const date=parseDate((row[pDateI]||'').trim());
+    payments.push({name, date, dateStr:(row[pDateI]||'').trim(), amt, type:(row[pTypeI]||'').trim()});
   }
 
   // ── Parse expenses ──
-  let eHdr = -1;
-  for(let i=0;i<Math.min(10,E.length);i++){
-    const row = (E[i]||[]).join('|');
-    if(row.indexOf('ชื่องาน') >= 0 || row.indexOf('ลูกค้า') >= 0) { eHdr = i; break; }
+  const eHdrIdx = findHdr(E,'ชื่องาน');
+  const eH = E[eHdrIdx]||[];
+  const eF = kw => eH.findIndex(h=>(h||'').indexOf(kw)>=0);
+  const eNameI = eF('ชื่องาน')>=0?eF('ชื่องาน'):eF('ลูกค้า');
+  const eDateI=eF('วันจัดงาน'), eTotI=eF('รวมค่าใช้จ่าย');
+
+  // Build per-item expense cols (cols 4..13 are individual expense items, col 14 is total)
+  const eItemCols = [];
+  for(let ci=3;ci<eH.length-1;ci++){
+    const label=(eH[ci]||'').trim();
+    if(label && label!=='รวมค่าใช้จ่าย') eItemCols.push({ci,label});
   }
-  if(eHdr < 0) eHdr = 3; // expense sheet has extra group header row
-  const eHeaders = E[eHdr] || [];
-  const eFind = kw => eHeaders.findIndex(h => (h||'').indexOf(kw) >= 0);
-  const eNameI = eFind('ชื่องาน') >= 0 ? eFind('ชื่องาน') : eFind('ลูกค้า');
-  const eDateI = eFind('วันจัดงาน');
-  const eTotalI = eFind('รวมค่าใช้จ่าย');
 
   const expenses = [];
-  for(let i=eHdr+1; i<E.length; i++){
-    const row = E[i] || [];
-    const name = (row[eNameI]||'').trim();
-    const total = parseNum(row[eTotalI]);
+  for(let i=eHdrIdx+1;i<E.length;i++){
+    const row=E[i]||[];
+    const name=(row[eNameI]||'').trim();
     if(!name) continue;
-    const dateStr = (row[eDateI]||'').trim();
-    let date = null;
-    const m = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-    if(m) {
-      let dd=parseInt(m[1]), mm=parseInt(m[2]), yy=parseInt(m[3]);
-      if(yy<100) yy+=2000;
-      if(yy>2500) yy-=543;
-      date = new Date(yy, mm-1, dd);
-    }
-    expenses.push({ name:name, date:date, total:total });
+    const total=parseNum(row[eTotI]);
+    const date=parseDate((row[eDateI]||'').trim());
+    const items = eItemCols.map(ec=>({label:ec.label, amt:parseNum(row[ec.ci]||'0')}))
+                            .filter(it=>it.amt>0);
+    expenses.push({name, date, total, items});
   }
 
-  // ── Calculate per-booking stats ──
-  const getRecvByName = (name) => payments.filter(p => p.name === name).reduce((s,p)=>s+p.amt, 0);
-  const getExpByName  = (name) => expenses.filter(e => e.name === name).reduce((s,e)=>s+e.total, 0);
-
-  const enriched = bookings.map(b => {
-    const received = getRecvByName(b.name);
-    const expense  = getExpByName(b.name);
-    const outstanding = b.total - received;
-    const profit = received - expense;
-    return { ...b, received, expense, outstanding, profit };
+  // ── Enrich bookings ──
+  wmEnriched = bookings.map(b=>{
+    const received = payments.filter(p=>p.name===b.name).reduce((s,p)=>s+p.amt,0);
+    const expense  = expenses.filter(e=>e.name===b.name).reduce((s,e)=>s+e.total,0);
+    const outstanding = b.total-received;
+    const profit = received-expense;
+    const payList = payments.filter(p=>p.name===b.name);
+    const expList = expenses.filter(e=>e.name===b.name);
+    return {...b, received, expense, outstanding, profit, payList, expList};
   });
 
-  // ── Totals ──
-  const totalIncome = payments.reduce((s,p)=>s+p.amt, 0);
-  const totalExpense = expenses.reduce((s,e)=>s+e.total, 0);
-  const totalProfit = totalIncome - totalExpense;
-  const totalOutstanding = enriched.reduce((s,b)=>s+Math.max(0,b.outstanding), 0);
+  // ── Overall metrics ──
+  const totalIncome  = payments.reduce((s,p)=>s+p.amt,0);
+  const totalExpense = expenses.reduce((s,e)=>s+e.total,0);
+  const totalProfit  = totalIncome-totalExpense;
+  const totalPending = wmEnriched.reduce((s,b)=>s+Math.max(0,b.outstanding),0);
 
-  // ── This month cashflow ──
-  const now = new Date();
-  const thisMonth = now.getMonth(), thisYear = now.getFullYear();
-  const monthPayments = payments.filter(p => p.date && p.date.getMonth()===thisMonth && p.date.getFullYear()===thisYear);
-  const monthExpenses = expenses.filter(e => e.date && e.date.getMonth()===thisMonth && e.date.getFullYear()===thisYear);
-  const monthIn  = monthPayments.reduce((s,p)=>s+p.amt, 0);
-  const monthOut = monthExpenses.reduce((s,e)=>s+e.total, 0);
-
-  // ── Update KPIs ──
-  $('wm-profit').textContent = fmtFull(totalProfit);
-  $('wm-profit').style.color = totalProfit >= 0 ? 'var(--pink)' : 'var(--red)';
-  $('wm-profitSub').textContent = enriched.length + ' งาน / รวมมูลค่า ' + fmtFull(enriched.reduce((s,b)=>s+b.total, 0));
   $('wm-income').textContent  = fmtShort(totalIncome);
   $('wm-expense').textContent = fmtShort(totalExpense);
-  $('wm-pending').textContent = fmtShort(totalOutstanding);
-  $('wm-bookings').textContent = String(enriched.length);
-  $('wm-monthIn').textContent = fmtShort(monthIn);
-  $('wm-monthInCount').textContent = monthPayments.length + ' รายการรับเงิน';
-  $('wm-monthOut').textContent = fmtShort(monthOut);
-  $('wm-monthOutCount').textContent = monthExpenses.length + ' รายการจ่าย';
+  $('wm-profit').textContent  = fmtFull(totalProfit);
+  $('wm-profit').style.color  = totalProfit>=0?'var(--green)':'var(--red)';
+  $('wm-pending').textContent = fmtShort(totalPending);
+  $('wm-bookings').textContent= String(wmEnriched.length);
 
-  // ── Pipeline (งาน 90 วันข้างหน้า) ──
-  const today = new Date(); today.setHours(0,0,0,0);
-  const in90Days = new Date(today); in90Days.setDate(in90Days.getDate() + 90);
-  const pipeline = enriched
-    .filter(b => b.date && b.date >= today && b.date <= in90Days)
-    .sort((a,b) => a.date.getTime() - b.date.getTime());
+  // ── Build month tabs from booking dates ──
+  const months = {};
+  wmEnriched.forEach(b=>{
+    if(!b.date) return;
+    const k = b.date.getFullYear()+'-'+String(b.date.getMonth()+1).padStart(2,'0');
+    const thaiM=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    months[k] = thaiM[b.date.getMonth()]+' '+(b.date.getFullYear()+543);
+  });
+  const sortedMonths = Object.keys(months).sort();
+
+  const tabsEl = $('wmMonthTabs');
+  tabsEl.innerHTML = '<button class="wm-month-tab'+(wmCurrentMonth==='all'?' active':'')+'" onclick="wmSelectMonth('all',this)">ทั้งหมด</button>';
+  sortedMonths.forEach(k=>{
+    const active = wmCurrentMonth===k?' active':'';
+    tabsEl.innerHTML += '<button class="wm-month-tab'+active+'" onclick="wmSelectMonth(''+k+'',this)">'+months[k]+'</button>';
+  });
+
+  // Render with current month filter
+  wmPage = 1;
+  wmRenderFiltered();
+}
+
+function wmSelectMonth(month, btn) {
+  wmCurrentMonth = month;
+  document.querySelectorAll('.wm-month-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  wmPage = 1;
+  wmRenderFiltered();
+}
+
+function wmRenderFiltered() {
+  const now = new Date(); now.setHours(0,0,0,0);
+
+  // Filter bookings by month
+  let filtered = wmEnriched;
+  if(wmCurrentMonth !== 'all') {
+    const [y,m] = wmCurrentMonth.split('-').map(Number);
+    filtered = wmEnriched.filter(b => b.date && b.date.getFullYear()===y && b.date.getMonth()+1===m);
+  }
+
+  // ── Pipeline ──
+  let pipelineBookings;
+  if(wmCurrentMonth === 'all') {
+    // เดือนนี้ + 2 เดือนถัดไป
+    const in90 = new Date(now); in90.setDate(in90.getDate()+90);
+    pipelineBookings = wmEnriched
+      .filter(b=>b.date&&b.date>=now&&b.date<=in90)
+      .sort((a,b)=>a.date.getTime()-b.date.getTime());
+    $('wmPipelineTitle').textContent = '📅 Pipeline — งานเดือนนี้ + 2 เดือนถัดไป';
+  } else {
+    // เฉพาะงานในเดือนที่เลือก
+    pipelineBookings = filtered.sort((a,b)=>{
+      if(!a.date&&!b.date) return 0;
+      if(!a.date) return 1;
+      if(!b.date) return -1;
+      return a.date.getTime()-b.date.getTime();
+    });
+    $('wmPipelineTitle').textContent = '📅 งานในเดือนที่เลือก';
+  }
 
   const pipBody = $('wmPipelineBody');
   const pipEmpty = $('wmPipelineEmpty');
-  if(pipeline.length === 0) {
-    pipBody.innerHTML = '';
-    pipEmpty.style.display = 'block';
+  if(pipelineBookings.length===0){
+    pipBody.innerHTML=''; pipEmpty.style.display='block';
   } else {
-    pipEmpty.style.display = 'none';
-    pipBody.innerHTML = pipeline.map(b => {
-      const statusColor = b.status.indexOf('เสร็จ') >= 0 ? 'var(--green)' :
-                          b.status.indexOf('ยกเลิก') >= 0 ? 'var(--red)' : 'var(--yellow)';
-      return '<tr>' +
-        '<td>' + b.dateStr + '</td>' +
-        '<td><strong>' + b.name + '</strong><div style="font-size:10px;color:var(--muted2);">' + b.pkg + '</div></td>' +
-        '<td style="text-align:right;">' + fmtFull(b.total) + '</td>' +
-        '<td style="text-align:right;color:var(--green);">' + fmtFull(b.received) + '</td>' +
-        '<td style="text-align:right;color:var(--red);">' + fmtFull(b.outstanding) + '</td>' +
-        '<td><span style="color:' + statusColor + ';font-size:11px;">' + (b.status||'—') + '</span></td>' +
+    pipEmpty.style.display='none';
+    pipBody.innerHTML = pipelineBookings.map(b=>{
+      const sc = b.status.indexOf('เสร็จ')>=0?'var(--green)':b.status.indexOf('ยกเลิก')>=0?'var(--red)':'var(--yellow)';
+      return '<tr style="cursor:pointer;" onclick="wmOpenModal(''+encodeURIComponent(b.name)+'')">' +
+        '<td>'+b.dateStr+'</td>' +
+        '<td><strong>'+b.name+'</strong><div style="font-size:10px;color:var(--muted2);">'+b.pkg+'</div></td>' +
+        '<td style="text-align:right;">'+fmtFull(b.total)+'</td>' +
+        '<td style="text-align:right;color:var(--green);">'+fmtFull(b.received)+'</td>' +
+        '<td style="text-align:right;color:var(--red);">'+fmtFull(b.outstanding)+'</td>' +
+        '<td><span style="color:'+sc+';font-size:11px;">'+(b.status||'—')+'</span></td>' +
         '</tr>';
     }).join('');
   }
 
-  // ── All bookings ──
-  const allBody = $('wmAllBody');
-  const allEmpty = $('wmAllEmpty');
-  if(enriched.length === 0) {
-    allBody.innerHTML = '';
-    allEmpty.style.display = 'block';
+  // ── All bookings with pagination ──
+  // Sort: upcoming first (asc date), past at bottom
+  const sorted = [...filtered].sort((a,b)=>{
+    if(!a.date&&!b.date) return 0;
+    if(!a.date) return 1; if(!b.date) return -1;
+    return a.date.getTime()-b.date.getTime();
+  });
+
+  const total = sorted.length;
+  const totalPages = Math.ceil(total/WM_PAGE_SIZE);
+  if(wmPage>totalPages) wmPage=Math.max(1,totalPages);
+  const start = (wmPage-1)*WM_PAGE_SIZE;
+  const pageItems = sorted.slice(start, start+WM_PAGE_SIZE);
+
+  $('wmAllTitle').textContent = '📋 '+(wmCurrentMonth==='all'?'ทุกงาน':'งานในเดือนนี้')+' ('+total+' งาน)';
+  $('wmPageInfo').textContent = total>0?'หน้า '+wmPage+'/'+totalPages:'';
+
+  const allBody=$('wmAllBody'), allEmpty=$('wmAllEmpty');
+  if(pageItems.length===0){
+    allBody.innerHTML=''; allEmpty.style.display='block';
   } else {
-    allEmpty.style.display = 'none';
-    const sorted = [...enriched].sort((a,b) => (b.date?.getTime()||0) - (a.date?.getTime()||0));
-    allBody.innerHTML = sorted.map(b => {
-      const statusColor = b.status.indexOf('เสร็จ') >= 0 ? 'var(--green)' :
-                          b.status.indexOf('ยกเลิก') >= 0 ? 'var(--red)' : 'var(--yellow)';
-      const profitColor = b.profit >= 0 ? 'var(--green)' : 'var(--red)';
-      return '<tr>' +
-        '<td>' + b.dateStr + '</td>' +
-        '<td><strong>' + b.name + '</strong></td>' +
-        '<td style="text-align:right;">' + fmtFull(b.total) + '</td>' +
-        '<td style="text-align:right;color:var(--green);">' + fmtFull(b.received) + '</td>' +
-        '<td style="text-align:right;color:var(--red);">' + fmtFull(b.expense) + '</td>' +
-        '<td style="text-align:right;color:' + profitColor + ';font-weight:500;">' + fmtFull(b.profit) + '</td>' +
-        '<td><span style="color:' + statusColor + ';font-size:11px;">' + (b.status||'—') + '</span></td>' +
+    allEmpty.style.display='none';
+    allBody.innerHTML = pageItems.map(b=>{
+      const sc = b.status.indexOf('เสร็จ')>=0?'var(--green)':b.status.indexOf('ยกเลิก')>=0?'var(--red)':'var(--yellow)';
+      const pc = b.profit>=0?'var(--green)':'var(--red)';
+      return '<tr style="cursor:pointer;" onclick="wmOpenModal(''+encodeURIComponent(b.name)+'')">' +
+        '<td>'+b.dateStr+'</td>' +
+        '<td><strong>'+b.name+'</strong></td>' +
+        '<td style="text-align:right;">'+fmtFull(b.total)+'</td>' +
+        '<td style="text-align:right;color:var(--green);">'+fmtFull(b.received)+'</td>' +
+        '<td style="text-align:right;color:var(--red);">'+fmtFull(b.expense)+'</td>' +
+        '<td style="text-align:right;color:'+pc+';font-weight:500;">'+fmtFull(b.profit)+'</td>' +
+        '<td><span style="color:'+sc+';font-size:11px;">'+(b.status||'—')+'</span></td>' +
         '</tr>';
     }).join('');
   }
+
+  // Render pagination
+  wmRenderPagination(totalPages);
+}
+
+function wmRenderPagination(totalPages) {
+  const el = $('wmPagination');
+  if(totalPages<=1){el.innerHTML='';return;}
+  let html = '<button class="page-btn" onclick="wmGoPage('+(wmPage-1)+')" '+(wmPage<=1?'disabled':'')+'>‹</button>';
+  for(let p=1;p<=totalPages;p++){
+    if(p===1||p===totalPages||Math.abs(p-wmPage)<=1){
+      html+='<button class="page-btn'+(p===wmPage?' active':'')+'" onclick="wmGoPage('+p+')">'+p+'</button>';
+    } else if(Math.abs(p-wmPage)===2){
+      html+='<span style="color:var(--muted);padding:0 4px;">…</span>';
+    }
+  }
+  html+='<button class="page-btn" onclick="wmGoPage('+(wmPage+1)+')" '+(wmPage>=totalPages?'disabled':'')+'>›</button>';
+  el.innerHTML=html;
+}
+
+function wmGoPage(p) {
+  const sorted = wmCurrentMonth==='all'
+    ? wmEnriched
+    : (()=>{const[y,m]=wmCurrentMonth.split('-').map(Number); return wmEnriched.filter(b=>b.date&&b.date.getFullYear()===y&&b.date.getMonth()+1===m);})();
+  const totalPages = Math.ceil(sorted.length/WM_PAGE_SIZE);
+  wmPage = Math.max(1,Math.min(p,totalPages));
+  wmRenderFiltered();
+}
+
+function wmOpenModal(encodedName) {
+  const name = decodeURIComponent(encodedName);
+  const b = wmEnriched.find(x=>x.name===name);
+  if(!b) return;
+
+  const sc = b.status.indexOf('เสร็จ')>=0?'var(--green)':b.status.indexOf('ยกเลิก')>=0?'var(--red)':'var(--yellow)';
+  const pc = b.profit>=0?'var(--green)':'var(--red)';
+
+  let html = '<div style="margin-bottom:16px;">';
+  html += '<div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;">'+name+'</div>';
+  html += '<div style="font-size:12px;color:var(--muted);">'+b.dateStr+'  &nbsp;|&nbsp;  '+b.pkg+'</div>';
+  html += '<div style="margin-top:6px;"><span style="color:'+sc+';font-size:12px;background:var(--bg3);padding:3px 10px;border-radius:10px;">'+(b.status||'—')+'</span></div>';
+  html += '</div>';
+
+  // KPIs
+  html += '<div class="modal-kpi-row">';
+  html += '<div class="modal-kpi"><div class="modal-kpi-lbl">ราคารวมงาน</div><div class="modal-kpi-val" style="color:var(--text);">'+fmtFull(b.total)+'</div></div>';
+  html += '<div class="modal-kpi"><div class="modal-kpi-lbl">รับมาแล้ว</div><div class="modal-kpi-val" style="color:var(--green);">'+fmtFull(b.received)+'</div></div>';
+  html += '<div class="modal-kpi"><div class="modal-kpi-lbl">คงค้างรับ</div><div class="modal-kpi-val" style="color:var(--red);">'+fmtFull(b.outstanding)+'</div></div>';
+  html += '<div class="modal-kpi"><div class="modal-kpi-lbl">ค่าใช้จ่าย</div><div class="modal-kpi-val" style="color:var(--red);">'+fmtFull(b.expense)+'</div></div>';
+  html += '<div class="modal-kpi"><div class="modal-kpi-lbl">กำไรสุทธิ</div><div class="modal-kpi-val" style="color:'+pc+';">'+fmtFull(b.profit)+'</div></div>';
+  html += '</div>';
+
+  // Payment history
+  html += '<div class="modal-section"><div class="modal-section-title">ประวัติการรับเงิน ('+b.payList.length+' รายการ)</div>';
+  if(b.payList.length===0){
+    html += '<div style="color:var(--muted);font-size:12px;padding:8px 0;">ยังไม่มีการรับเงิน</div>';
+  } else {
+    html += '<table style="width:100%;font-size:12px;border-collapse:collapse;">';
+    html += '<thead><tr style="color:var(--muted);"><th style="text-align:left;padding:5px 0;border-bottom:1px solid var(--border);">วันที่</th><th style="padding:5px 0;border-bottom:1px solid var(--border);">ประเภท</th><th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--border);">จำนวน</th></tr></thead><tbody>';
+    let cumPay=0;
+    b.payList.forEach(p=>{
+      cumPay+=p.amt;
+      html+='<tr><td style="padding:5px 0;color:var(--muted2);">'+p.dateStr+'</td><td style="padding:5px 4px;color:var(--muted);">'+p.type+'</td><td style="text-align:right;padding:5px 8px;color:var(--green);font-weight:500;">+'+fmtFull(p.amt)+'</td></tr>';
+    });
+    html+='</tbody></table>';
+  }
+  html+='</div>';
+
+  // Expense details
+  html += '<div class="modal-section"><div class="modal-section-title">รายละเอียดค่าใช้จ่าย</div>';
+  if(b.expList.length===0||b.expense===0){
+    html += '<div style="color:var(--muted);font-size:12px;padding:8px 0;">ยังไม่มีบันทึกค่าใช้จ่าย</div>';
+  } else {
+    b.expList.forEach(ex=>{
+      if(ex.items && ex.items.length>0){
+        html+='<table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:8px;">';
+        html+='<thead><tr style="color:var(--muted);"><th style="text-align:left;padding:5px 0;border-bottom:1px solid var(--border);">รายการ</th><th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--border);">จำนวน</th></tr></thead><tbody>';
+        ex.items.forEach(it=>{
+          html+='<tr><td style="padding:5px 0;color:var(--muted2);">'+it.label+'</td><td style="text-align:right;padding:5px 8px;color:var(--red);">'+fmtFull(it.amt)+'</td></tr>';
+        });
+        html+='<tr style="border-top:1px solid var(--border);font-weight:600;"><td style="padding:6px 0;">รวมค่าใช้จ่าย</td><td style="text-align:right;padding:6px 8px;color:var(--red);">'+fmtFull(ex.total)+'</td></tr>';
+        html+='</tbody></table>';
+      } else {
+        html+='<div style="color:var(--muted);padding:5px 0;font-size:12px;">รวม: '+fmtFull(ex.total)+'</div>';
+      }
+    });
+  }
+  html+='</div>';
+
+  $('wmModalContent').innerHTML = html;
+  $('wmModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeWmModal() {
+  $('wmModal').style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 // ══════════════════════════════════════════════
