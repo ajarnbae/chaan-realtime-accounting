@@ -130,6 +130,18 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
 .fi{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:12px;flex:1;min-width:120px;}
 .fi:focus{outline:none;border-color:var(--blue);}
+
+/* WEDDING MONTH TABS */
+.wm-month-tabs{display:flex;gap:0;flex-wrap:wrap;margin-bottom:16px;background:var(--bg2);border-radius:10px;padding:4px;width:fit-content;max-width:100%;}
+.wm-month-tab{padding:5px 13px;border-radius:7px;border:none;font-size:12px;cursor:pointer;background:transparent;color:var(--muted);font-family:'Sarabun',sans-serif;transition:all .15s;white-space:nowrap;}
+.wm-month-tab:hover{color:var(--text);}
+.wm-month-tab.active{background:var(--bg3);color:var(--pink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+/* PAGINATION */
+.pagination{display:flex;gap:4px;justify-content:center;margin-top:14px;align-items:center;flex-wrap:wrap;}
+.page-btn{min-width:32px;height:30px;border-radius:7px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-family:'Sarabun',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 8px;transition:all .15s;}
+.page-btn:hover:not([disabled]){color:var(--text);border-color:var(--muted2);background:var(--bg3);}
+.page-btn.active{background:var(--pink);color:#fff;border-color:var(--pink);font-weight:600;}
+.page-btn[disabled]{opacity:.3;cursor:not-allowed;}
 </style>
 </head>
 <body>
@@ -338,26 +350,28 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
   <div id="wmContent" style="display:none;">
 
-    <!-- OVERALL METRICS (all-time) -->
+    <!-- METRICS — changes with selected month -->
+    <div id="wm-metrics-label" style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500;letter-spacing:.04em;">ยอดรวมทั้งหมด</div>
     <div class="metrics">
       <div class="mc g">
-        <div class="mc-lbl">รายรับรวมทั้งหมด</div>
+        <div class="mc-lbl" id="wm-income-lbl">รายรับรวม</div>
         <div class="mc-val" id="wm-income">—</div>
       </div>
       <div class="mc r">
-        <div class="mc-lbl">ค่าใช้จ่ายรวมทั้งหมด</div>
+        <div class="mc-lbl" id="wm-expense-lbl">ค่าใช้จ่ายรวม</div>
         <div class="mc-val" id="wm-expense">—</div>
       </div>
       <div class="mc pk">
-        <div class="mc-lbl">กำไรสุทธิรวม</div>
+        <div class="mc-lbl" id="wm-profit-lbl">กำไรสุทธิ</div>
         <div class="mc-val" id="wm-profit">—</div>
       </div>
       <div class="mc y">
-        <div class="mc-lbl">ยังไม่โอนกสิกร</div>
-        <div class="mc-val" id="wm-pending">—</div>
+        <div class="mc-lbl">ยังไม่โอนกสิกร (เดือนนี้)</div>
+        <div class="mc-val" id="wm-pending-month">—</div>
+        <div class="mc-sub" style="font-size:10px;color:var(--muted2);margin-top:2px;">ยอดรวมทั้งหมด: <span id="wm-pending-all">—</span></div>
       </div>
       <div class="mc b">
-        <div class="mc-lbl">งานทั้งหมด</div>
+        <div class="mc-lbl" id="wm-bookings-lbl">จำนวนงาน</div>
         <div class="mc-val" id="wm-bookings">—</div>
       </div>
     </div>
@@ -651,8 +665,8 @@ let CENTRAL_FUND_SHEET_ID = '';
 let centralFundData = null;
 
 // Wedding Master Sheet — ชีทเดียว 3 tabs: งาน / การชำระเงิน / ค่าใช้จ่าย
-let WEDDING_MASTER = { sheetId:'', gBookings:'', gPayments:'', gExpenses:'' };
-let weddingMasterData = { bookings:null, payments:null, expenses:null };
+let WEDDING_MASTER = { sheetId:'', gBookings:'', gPayments:'', gExpenses:'', gSummary:'' };
+let weddingMasterData = { bookings:null, payments:null, expenses:null, summary:null };
 
 // Fallback hardcode (ใช้ถ้า Config Sheet โหลดไม่ได้)
 const MONTHS_FALLBACK = [
@@ -710,7 +724,7 @@ async function loadConfigSheet() {
           iWS=gi('weddingSum'), iWI=gi('weddingIn'), iWO=gi('weddingOut'),
           iCF=gi('centralFund'),
           iWM=gi('weddingMaster'),
-          iWMB=gi('wmBookings'), iWMP=gi('wmPayments'), iWMX=gi('wmExpenses');
+          iWMB=gi('wmBookings'), iWMP=gi('wmPayments'), iWMX=gi('wmExpenses'), iWMS=gi('wmSummary');
 
     const parsed = rows.slice(1)
       .filter(r => r[iLabel]&&r[iSid])
@@ -740,6 +754,7 @@ async function loadConfigSheet() {
         WEDDING_MASTER.gBookings= iWMB>=0 ? (wmRow[iWMB]||'').trim() : '';
         WEDDING_MASTER.gPayments= iWMP>=0 ? (wmRow[iWMP]||'').trim() : '';
         WEDDING_MASTER.gExpenses= iWMX>=0 ? (wmRow[iWMX]||'').trim() : '';
+        WEDDING_MASTER.gSummary = iWMS>=0 ? (wmRow[iWMS]||'').trim() : '';
       }
     }
 
@@ -1961,17 +1976,20 @@ async function loadWeddingMaster(force) {
     bookings: WEDDING_MASTER.gBookings ? base+'&gid='+WEDDING_MASTER.gBookings+'&t='+t : null,
     payments: WEDDING_MASTER.gPayments ? base+'&gid='+WEDDING_MASTER.gPayments+'&t='+t : null,
     expenses: WEDDING_MASTER.gExpenses ? base+'&gid='+WEDDING_MASTER.gExpenses+'&t='+t : null,
+    summary:  WEDDING_MASTER.gSummary  ? base+'&gid='+WEDDING_MASTER.gSummary +'&t='+t : null,
   };
 
-  const [csvB, csvP, csvE] = await Promise.all([
+  const [csvB, csvP, csvE, csvS] = await Promise.all([
     urls.bookings ? fetchCSVWithTimeout(urls.bookings,10000) : Promise.resolve(null),
     urls.payments ? fetchCSVWithTimeout(urls.payments,10000) : Promise.resolve(null),
     urls.expenses ? fetchCSVWithTimeout(urls.expenses,10000) : Promise.resolve(null),
+    urls.summary  ? fetchCSVWithTimeout(urls.summary, 10000) : Promise.resolve(null),
   ]);
 
   weddingMasterData.bookings = csvB ? parseCSV(csvB) : null;
   weddingMasterData.payments = csvP ? parseCSV(csvP) : null;
   weddingMasterData.expenses = csvE ? parseCSV(csvE) : null;
+  weddingMasterData.summary  = csvS ? parseCSV(csvS) : null;
 
   renderWeddingMaster();
 }
@@ -2082,18 +2100,42 @@ function renderWeddingMaster() {
     return {...b, received, expense, outstanding, profit, payList, expList};
   });
 
-  // ── Overall metrics ──
-  const totalIncome  = payments.reduce((s,p)=>s+p.amt,0);
-  const totalExpense = expenses.reduce((s,e)=>s+e.total,0);
-  const totalProfit  = totalIncome-totalExpense;
-  const totalPending = wmEnriched.reduce((s,b)=>s+Math.max(0,b.outstanding),0);
+  // ── Parse summary tab for "ยังไม่โอนกสิกร" per booking ──
+  const S = weddingMasterData.summary || [];
+  const sHdrIdx = findHdr(S,'ชื่อลูกค้า','ยังไม่โอน');
+  const sH = S[sHdrIdx] || [];
+  const sF = kw => sH.findIndex(h=>(h||'').indexOf(kw)>=0);
+  const sNameI    = sF('ชื่อลูกค้า');
+  const sPendingI = sF('ยังไม่โอน');   // col M "ยังไม่โอนกสิกร"
+  const sDateI    = sF('วันจัดงาน');
 
-  $('wm-income').textContent  = fmtShort(totalIncome);
-  $('wm-expense').textContent = fmtShort(totalExpense);
-  $('wm-profit').textContent  = fmtFull(totalProfit);
-  $('wm-profit').style.color  = totalProfit>=0?'var(--green)':'var(--red)';
-  $('wm-pending').textContent = fmtShort(totalPending);
-  $('wm-bookings').textContent= String(wmEnriched.length);
+  // Build map: name → { pending, date }
+  const summaryMap = {};
+  for(let i=sHdrIdx+1; i<S.length; i++){
+    const row=S[i]||[];
+    const name=(row[sNameI]||'').trim();
+    if(!name) continue;
+    summaryMap[name] = {
+      pending: parseNum(row[sPendingI]),
+      dateStr: (row[sDateI]||'').trim(),
+    };
+  }
+
+  // Override pending values from summary if available
+  wmEnriched.forEach(b=>{
+    if(summaryMap[b.name] !== undefined){
+      b.pendingKbank = summaryMap[b.name].pending;
+    } else {
+      // fallback: profit (no transfer recorded yet)
+      b.pendingKbank = b.profit;
+    }
+  });
+
+  // ── Overall metrics (store as globals, display via wmRenderFiltered) ──
+  window._wmTotalIncome  = payments.reduce((s,p)=>s+p.amt,0);
+  window._wmTotalExpense = expenses.reduce((s,e)=>s+e.total,0);
+  window._wmTotalProfit  = window._wmTotalIncome - window._wmTotalExpense;
+  window._wmTotalPending = wmEnriched.reduce((s,b)=>s+Math.max(0,b.pendingKbank||b.profit),0);
 
   // ── Build month tabs from booking dates ──
   const months = {};
@@ -2127,6 +2169,7 @@ function wmSelectMonth(month, btn) {
 
 function wmRenderFiltered() {
   const now = new Date(); now.setHours(0,0,0,0);
+  const thaiMonthsArr=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
   // Filter bookings by month
   let filtered = wmEnriched;
@@ -2134,6 +2177,35 @@ function wmRenderFiltered() {
     const [y,m] = wmCurrentMonth.split('-').map(Number);
     filtered = wmEnriched.filter(b => b.date && b.date.getFullYear()===y && b.date.getMonth()+1===m);
   }
+
+  // ── Update metrics for selected month ──
+  const isAll = wmCurrentMonth === 'all';
+  let monthLabel = 'ยอดรวมทั้งหมด';
+  if(!isAll){const[y,m]=wmCurrentMonth.split('-').map(Number); monthLabel=thaiMonthsArr[m-1]+' '+(y+543);}
+  $('wm-metrics-label').textContent = monthLabel;
+
+  const fIncome  = filtered.reduce((s,b)=>s+b.received,0);
+  const fExpense = filtered.reduce((s,b)=>s+b.expense,0);
+  const fProfit  = fIncome - fExpense;
+  const fPending = filtered.reduce((s,b)=>s+Math.max(0,b.pendingKbank!==undefined?b.pendingKbank:b.profit),0);
+
+  const shownIncome  = isAll ? (window._wmTotalIncome||fIncome)   : fIncome;
+  const shownExpense = isAll ? (window._wmTotalExpense||fExpense)  : fExpense;
+  const shownProfit  = isAll ? (window._wmTotalProfit||fProfit)   : fProfit;
+  const shownPending = isAll ? (window._wmTotalPending||fPending) : fPending;
+  const pendingAll   = window._wmTotalPending || wmEnriched.reduce((s,b)=>s+Math.max(0,b.pendingKbank!==undefined?b.pendingKbank:b.profit),0);
+
+  $('wm-income').textContent   = fmtShort(shownIncome);
+  $('wm-income-lbl').textContent = isAll ? 'รายรับรวม' : 'รายรับเดือนนี้';
+  $('wm-expense').textContent  = fmtShort(shownExpense);
+  $('wm-expense-lbl').textContent = isAll ? 'ค่าใช้จ่ายรวม' : 'ค่าใช้จ่ายเดือนนี้';
+  $('wm-profit').textContent   = fmtFull(shownProfit);
+  $('wm-profit').style.color   = shownProfit>=0?'var(--green)':'var(--red)';
+  $('wm-profit-lbl').textContent = isAll ? 'กำไรสุทธิรวม' : 'กำไรสุทธิเดือนนี้';
+  $('wm-pending-month').textContent = fmtShort(shownPending);
+  $('wm-pending-all').textContent   = fmtShort(pendingAll);
+  $('wm-bookings').textContent = String(filtered.length);
+  $('wm-bookings-lbl').textContent = isAll ? 'งานทั้งหมด' : 'งานในเดือนนี้';
 
   // ── Pipeline ──
   let pipelineBookings;
