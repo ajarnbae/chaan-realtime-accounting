@@ -416,11 +416,12 @@ tr:hover td{background:rgba(255,255,255,.02);}
           <thead><tr>
             <th style="width:110px;">วันจัดงาน</th>
             <th>ชื่อลูกค้า</th>
-            <th style="width:120px;text-align:right;">ราคารวม</th>
-            <th style="width:110px;text-align:right;">รับมา</th>
-            <th style="width:110px;text-align:right;">ค่าใช้จ่าย</th>
-            <th style="width:110px;text-align:right;">กำไรสุทธิ</th>
-            <th style="width:100px;">สถานะ</th>
+            <th style="width:110px;text-align:right;">ราคารวม</th>
+            <th style="width:100px;text-align:right;">รับมา</th>
+            <th style="width:100px;text-align:right;">ค่าใช้จ่าย</th>
+            <th style="width:100px;text-align:right;">กำไรสุทธิ</th>
+            <th style="width:90px;">สถานะ</th>
+            <th style="width:120px;">โอนกสิกร</th>
           </tr></thead>
           <tbody id="wmAllBody"></tbody>
         </table>
@@ -2109,26 +2110,33 @@ function renderWeddingMaster() {
   const sPendingI = sF('ยังไม่โอน');   // col M "ยังไม่โอนกสิกร"
   const sDateI    = sF('วันจัดงาน');
 
-  // Build map: name → { pending, date }
+  // Find kbank transfer columns
+  const sKbankDateI   = sH.findIndex(h=>(h||'').indexOf('วันที่โอน')>=0);
+  const sKbankAmtI    = sH.findIndex(h=>(h||'').indexOf('ยอดโอน')>=0);
+
+  // Build map: name → { pending, transferDate, transferAmount, transferred }
   const summaryMap = {};
   for(let i=sHdrIdx+1; i<S.length; i++){
     const row=S[i]||[];
     const name=(row[sNameI]||'').trim();
     if(!name) continue;
+    const tDate = sKbankDateI>=0 ? (row[sKbankDateI]||'').trim() : '';
+    const tAmt  = sKbankAmtI>=0 ? parseNum(row[sKbankAmtI]) : 0;
     summaryMap[name] = {
-      pending: parseNum(row[sPendingI]),
-      dateStr: (row[sDateI]||'').trim(),
+      pending:         parseNum(row[sPendingI]),
+      transferDate:    tDate,
+      transferAmount:  tAmt,
+      transferred:     tDate !== '' && tAmt > 0,
     };
   }
 
-  // Override pending values from summary if available
+  // Attach summary data to enriched bookings
   wmEnriched.forEach(b=>{
-    if(summaryMap[b.name] !== undefined){
-      b.pendingKbank = summaryMap[b.name].pending;
-    } else {
-      // fallback: profit (no transfer recorded yet)
-      b.pendingKbank = b.profit;
-    }
+    const sm = summaryMap[b.name];
+    b.pendingKbank   = sm ? sm.pending       : b.profit;
+    b.transferDate   = sm ? sm.transferDate  : '';
+    b.transferAmount = sm ? sm.transferAmount: 0;
+    b.transferred    = sm ? sm.transferred   : false;
   });
 
   // ── Overall metrics (store as globals, display via wmRenderFiltered) ──
@@ -2271,6 +2279,9 @@ function wmRenderFiltered() {
     allBody.innerHTML = pageItems.map(b=>{
       const sc = b.status.indexOf('เสร็จ')>=0?'var(--green)':b.status.indexOf('ยกเลิก')>=0?'var(--red)':'var(--yellow)';
       const pc = b.profit>=0?'var(--green)':'var(--red)';
+      const tbadge = b.transferred
+        ? '<span style="background:rgba(63,185,80,.15);color:var(--green);padding:2px 6px;border-radius:8px;font-size:10px;white-space:nowrap;">✓ '+b.transferDate+'</span>'
+        : '<span style="background:rgba(248,200,0,.1);color:var(--yellow);padding:2px 6px;border-radius:8px;font-size:10px;">⏳ รอโอน</span>';
       return '<tr style="cursor:pointer;" onclick="wmOpenModal(encodeURIComponent(b.name))">' +
         '<td>'+b.dateStr+'</td>' +
         '<td><strong>'+b.name+'</strong></td>' +
@@ -2279,6 +2290,7 @@ function wmRenderFiltered() {
         '<td style="text-align:right;color:var(--red);">'+fmtFull(b.expense)+'</td>' +
         '<td style="text-align:right;color:'+pc+';font-weight:500;">'+fmtFull(b.profit)+'</td>' +
         '<td><span style="color:'+sc+';font-size:11px;">'+(b.status||'—')+'</span></td>' +
+        '<td>'+tbadge+'</td>' +
         '</tr>';
     }).join('');
   }
@@ -2333,6 +2345,19 @@ function wmOpenModal(encodedName) {
   html += '<div class="modal-kpi"><div class="modal-kpi-lbl">ค่าใช้จ่าย</div><div class="modal-kpi-val" style="color:var(--red);">'+fmtFull(b.expense)+'</div></div>';
   html += '<div class="modal-kpi"><div class="modal-kpi-lbl">กำไรสุทธิ</div><div class="modal-kpi-val" style="color:'+pc+';">'+fmtFull(b.profit)+'</div></div>';
   html += '</div>';
+  if(b.transferred){
+    html += '<div style="background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.3);border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">';
+    html += '<span style="font-size:18px;">✅</span><div>';
+    html += '<div style="font-size:12px;color:var(--green);font-weight:600;">โอนเข้ากสิกรแล้ว</div>';
+    html += '<div style="font-size:11px;color:var(--muted2);">วันที่ '+b.transferDate+' &nbsp;|&nbsp; ยอด '+fmtFull(b.transferAmount)+'</div>';
+    html += '</div></div>';
+  } else {
+    html += '<div style="background:rgba(248,200,0,.08);border:1px solid rgba(248,200,0,.25);border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">';
+    html += '<span style="font-size:18px;">⏳</span><div>';
+    html += '<div style="font-size:12px;color:var(--yellow);font-weight:600;">รอโอนกสิกร</div>';
+    html += '<div style="font-size:11px;color:var(--muted2);">ยอดที่ต้องโอน: '+fmtFull(b.profit)+'</div>';
+    html += '</div></div>';
+  }
 
   // Payment history
   html += '<div class="modal-section"><div class="modal-section-title">ประวัติการรับเงิน ('+b.payList.length+' รายการ)</div>';
