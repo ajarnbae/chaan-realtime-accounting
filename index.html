@@ -218,7 +218,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
     <div class="sec-label">บัญชีกสิกร</div>
     <div class="metrics">
-      <div class="mc b"><div class="mc-lbl">เงินยืมกรรมการ</div><div class="mc-val" id="s-capital">—</div></div>
+      <div class="mc b"><div class="mc-lbl">Cashflow</div><div class="mc-val" id="s-capital">—</div></div>
       <div class="mc g"><div class="mc-lbl">รายได้สุทธิบัญชีกสิกร</div><div class="mc-val" id="s-kincome">—</div></div>
       <div class="mc r"><div class="mc-lbl">รายจ่ายสุทธิบัญชีกสิกร</div><div class="mc-val" id="s-kexpense">—</div></div>
       <div class="mc y"><div class="mc-lbl">รายได้ - รายจ่าย</div><div class="mc-val" id="s-knet">—</div></div>
@@ -366,9 +366,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
         <div class="mc-val" id="wm-profit">—</div>
       </div>
       <div class="mc y">
-        <div class="mc-lbl">ยังไม่โอนกสิกร (เดือนนี้)</div>
+        <div class="mc-lbl" id="wm-pending-lbl">ยังไม่โอนกสิกร (รวม)</div>
         <div class="mc-val" id="wm-pending-month">—</div>
-        <div class="mc-sub" style="font-size:10px;color:var(--muted2);margin-top:2px;">ยอดรวมทั้งหมด: <span id="wm-pending-all">—</span></div>
+        <div class="mc-sub" style="font-size:10px;color:var(--muted2);margin-top:2px;" id="wm-pending-sub" style="display:none;">ยอดรวมทั้งหมด: <span id="wm-pending-all">—</span></div>
       </div>
       <div class="mc b">
         <div class="mc-lbl" id="wm-bookings-lbl">จำนวนงาน</div>
@@ -2212,6 +2212,11 @@ function wmRenderFiltered() {
   $('wm-profit-lbl').textContent = isAll ? 'กำไรสุทธิรวม' : 'กำไรสุทธิเดือนนี้';
   $('wm-pending-month').textContent = fmtShort(shownPending);
   $('wm-pending-all').textContent   = fmtShort(pendingAll);
+  // Label: "รวม" when all-time, "เดือนนั้น" when specific month
+  const pendingLbl = $('wm-pending-lbl');
+  const pendingSub = $('wm-pending-sub');
+  if(pendingLbl) pendingLbl.textContent = isAll ? 'ยังไม่โอนกสิกร (รวม)' : 'ยังไม่โอนกสิกร (เดือนนี้)';
+  if(pendingSub) pendingSub.style.display = isAll ? 'none' : 'block';
   $('wm-bookings').textContent = String(filtered.length);
   $('wm-bookings-lbl').textContent = isAll ? 'งานทั้งหมด' : 'งานในเดือนนี้';
 
