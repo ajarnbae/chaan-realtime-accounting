@@ -175,6 +175,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <button class="sec-btn active" onclick="switchSection('restaurant',this)">🍜 ร้านอาหาร</button>
     <button class="sec-btn" onclick="switchSection('wedding',this)">💍 Wedding</button>
     <button class="sec-btn" onclick="switchSection('central',this)">🏦 กองกลาง</button>
+    <button class="sec-btn" onclick="switchSection('cashflow',this)">💵 Cashflow</button>
     <button class="sec-btn" onclick="switchSection('growth',this)">📈 เปรียบเทียบเดือน</button>
     <button class="sec-btn" onclick="switchSection('months',this)" id="mmBtn">⚙ จัดการเดือน</button>
   </div>
@@ -516,6 +517,96 @@ tr:hover td{background:rgba(255,255,255,.02);}
   </div>
 
 </div><!-- /sec-central -->
+
+<!-- ═══ CASHFLOW SECTION ═══ -->
+<div id="sec-cashflow" class="wrap" style="display:none;">
+
+  <!-- BIG KPI -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;">ยอดคงเหลือกสิกรปัจจุบัน</div>
+        <div id="cf2-balance" style="font-size:40px;font-weight:700;color:var(--blue);line-height:1.1;">—</div>
+        <div id="cf2-balanceSub" style="font-size:12px;color:var(--muted2);margin-top:4px;">—</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Target</div>
+        <div style="font-size:24px;font-weight:600;color:var(--muted2);">฿500,000</div>
+        <div id="cf2-status" style="margin-top:6px;font-size:13px;font-weight:600;">—</div>
+      </div>
+    </div>
+    <!-- Progress bar -->
+    <div style="margin-top:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px;">
+        <span>0</span><span id="cf2-pct">—</span><span>฿500K</span>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;height:12px;overflow:hidden;">
+        <div id="cf2-bar" style="height:100%;border-radius:8px;background:var(--green);transition:width .4s;width:0%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- METRICS -->
+  <div class="metrics">
+    <div class="mc g">
+      <div class="mc-lbl">ยอดคงเหลือ</div>
+      <div class="mc-val" id="cf2-current">—</div>
+    </div>
+    <div class="mc r">
+      <div class="mc-lbl">ขาด / เกิน target</div>
+      <div class="mc-val" id="cf2-gap">—</div>
+    </div>
+    <div class="mc y">
+      <div class="mc-lbl">เติมแล้วเดือนนี้</div>
+      <div class="mc-val" id="cf2-topupMonth">—</div>
+    </div>
+    <div class="mc b">
+      <div class="mc-lbl">หนี้ค้างจ่ายรวม</div>
+      <div class="mc-val" id="cf2-debt">—</div>
+    </div>
+  </div>
+
+  <!-- TOP-UP LOG -->
+  <div class="card" style="margin-top:12px;">
+    <div class="card-title" style="color:var(--yellow)">💰 ประวัติการเติม Cashflow</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:100px;">วันที่</th>
+          <th style="width:120px;">เดือนที่เติม</th>
+          <th>แหล่งเงิน</th>
+          <th style="width:130px;text-align:right;">จำนวน</th>
+          <th>หมายเหตุ</th>
+        </tr></thead>
+        <tbody id="cf2-topupBody"></tbody>
+      </table>
+    </div>
+    <div id="cf2-topupEmpty" style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">
+      ยังไม่มีการเติม Cashflow
+    </div>
+  </div>
+
+  <!-- DEBT TABLE -->
+  <div class="card" style="margin-top:12px;">
+    <div class="card-title" style="color:var(--red)">⚠️ หนี้ค้างจ่าย</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>รายการ</th>
+          <th style="width:130px;text-align:right;">จำนวน</th>
+          <th style="width:110px;">กำหนดจ่าย</th>
+          <th style="width:100px;">สถานะ</th>
+          <th>หมายเหตุ</th>
+        </tr></thead>
+        <tbody id="cf2-debtBody"></tbody>
+      </table>
+    </div>
+    <div id="cf2-debtEmpty" style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">
+      ไม่มีหนี้ค้างจ่าย
+    </div>
+  </div>
+
+</div><!-- /sec-cashflow -->
 
 <!-- ═══ GROWTH SECTION ═══ -->
 <div id="sec-growth" class="wrap" style="display:none;">
@@ -1752,7 +1843,135 @@ function switchSection(sec, btn) {
   if(sec==='growth') renderGrowth();
   if(sec==='months') renderMMList();
   if(sec==='central') loadCentralFund();
+  if(sec==='cashflow') loadCashflow();
   if(sec==='wedding') loadWeddingMaster();
+}
+
+// ══════════════════════════════════════════════
+// CASHFLOW — load & render
+// ══════════════════════════════════════════════
+let cashflowData = null;
+const CF_TARGET = 500000;
+
+async function loadCashflow(force) {
+  if(!CENTRAL_FUND_SHEET_ID) return;
+  if(cashflowData && !force) { renderCashflow(cashflowData); return; }
+
+  const t = Date.now();
+  // Cashflow tab is tab 3 in Central Fund sheet — try gid via fetch
+  // Since we don't have a separate gid config, we fetch the whole published doc
+  // The Cashflow tab is the 3rd tab — but gid is unknown
+  // Fallback: use "ยอดคงเหลือกสิกร" from Summary sheet + load cashflow log from Central Fund
+  // We'll use the Central Fund sheet's first tab (บันทึกรายการ) for top-up log
+
+  // For balance: pull from current month's Summary (GIDS.summary already loaded in D)
+  const balance = D.summary ? getCashflowBalance() : null;
+
+  // For top-up log: try fetching Cashflow tab (need user to set gid)
+  // For now, render with what we have from D.kbankIn (s-kbal)
+  renderCashflow({ balance });
+}
+
+function getCashflowBalance() {
+  // ยอดคงเหลือกสิกร is row index 5 (0-based) in summary, col B
+  // Summary structure: row0=header labels, rows 1-12 = data
+  // s-kbal already rendered by renderSummary — read from DOM
+  const kbalEl = document.getElementById('s-kbal');
+  if(kbalEl && kbalEl.textContent !== '—') {
+    // parse the formatted number back
+    const txt = kbalEl.textContent.replace(/[฿,KMBk]/g,'').trim();
+    const mult = kbalEl.textContent.includes('K') ? 1000 :
+                 kbalEl.textContent.includes('M') ? 1000000 : 1;
+    return parseFloat(txt) * mult;
+  }
+  return null;
+}
+
+function renderCashflow(data) {
+  const balance = data && data.balance != null ? data.balance : getCashflowBalance();
+
+  if(balance === null) {
+    $('cf2-balance').textContent = '—';
+    $('cf2-balanceSub').textContent = 'โหลดข้อมูลกสิกรก่อน แล้วกลับมาที่ Cashflow';
+    return;
+  }
+
+  const gap = balance - CF_TARGET;
+  const pct = Math.min(100, Math.max(0, (balance / CF_TARGET) * 100));
+  const sufficient = balance >= CF_TARGET;
+
+  $('cf2-balance').textContent = fmtFull(balance);
+  $('cf2-balance').style.color = sufficient ? 'var(--green)' : 'var(--red)';
+  $('cf2-balanceSub').textContent = 'ยอดคงเหลือกสิกรจาก Summary เดือนปัจจุบัน';
+  $('cf2-status').textContent = sufficient ? '✅ Cashflow เพียงพอ' : '⚠️ Cashflow ขาด ' + fmtFull(Math.abs(gap));
+  $('cf2-status').style.color = sufficient ? 'var(--green)' : 'var(--red)';
+  $('cf2-pct').textContent = pct.toFixed(1) + '%';
+  $('cf2-bar').style.width = pct + '%';
+  $('cf2-bar').style.background = sufficient ? 'var(--green)' : gap > -100000 ? 'var(--yellow)' : 'var(--red)';
+
+  $('cf2-current').textContent = fmtShort(balance);
+  $('cf2-current').style.color = sufficient ? 'var(--green)' : 'var(--red)';
+  $('cf2-gap').textContent = (gap >= 0 ? '+' : '') + fmtShort(gap);
+  $('cf2-gap').style.color = gap >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // Top-up log — from Central Fund บันทึกรายการ (already loaded)
+  if(centralFundData && centralFundData.length > 0) {
+    // Filter rows where type = เข้า (top-up entries)
+    let hdrIdx = -1;
+    for(let i=0;i<Math.min(10,centralFundData.length);i++){
+      const r=(centralFundData[i]||[]).join('|');
+      if(r.indexOf('วันที่')>=0 && r.indexOf('ประเภท')>=0){hdrIdx=i;break;}
+    }
+    if(hdrIdx>=0){
+      const hdr=centralFundData[hdrIdx]||[];
+      const dI=hdr.findIndex(h=>(h||'').indexOf('วันที่')>=0);
+      const tI=hdr.findIndex(h=>(h||'').indexOf('ประเภท')>=0);
+      const aI=hdr.findIndex(h=>(h||'').indexOf('จำนวน')>=0);
+      const rI=hdr.findIndex(h=>(h||'').indexOf('เหตุผล')>=0||h.indexOf('รายละเอียด')>=0);
+
+      const topups = [];
+      for(let i=hdrIdx+1;i<centralFundData.length;i++){
+        const row=centralFundData[i]||[];
+        if((row[tI]||'').trim()==='เข้า' && parseNum(row[aI])>0){
+          topups.push({date:(row[dI]||'').trim(),amt:parseNum(row[aI]),reason:(row[rI]||'').trim()});
+        }
+      }
+
+      const now=new Date();
+      const monthTopup=topups.filter(t=>{
+        const m=t.date.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+        if(!m) return false;
+        let yy=parseInt(m[3]); if(yy>2500) yy-=543;
+        return parseInt(m[2])-1===now.getMonth() && yy===now.getFullYear();
+      }).reduce((s,t)=>s+t.amt,0);
+
+      $('cf2-topupMonth').textContent = fmtShort(monthTopup);
+
+      if(topups.length===0){
+        $('cf2-topupEmpty').style.display='block';
+        $('cf2-topupBody').innerHTML='';
+      } else {
+        $('cf2-topupEmpty').style.display='none';
+        $('cf2-topupBody').innerHTML=topups.slice().reverse().map(t=>{
+          const srcColor = t.reason.indexOf('กำไร')>=0?'var(--green)':t.reason.indexOf('กองกลาง')>=0?'var(--teal)':'var(--muted)';
+          return '<tr><td>'+t.date+'</td><td>—</td><td style="color:'+srcColor+';">'+t.reason+'</td><td style="text-align:right;color:var(--green);font-weight:500;">+'+fmtFull(t.amt)+'</td><td>—</td></tr>';
+        }).join('');
+      }
+    }
+  } else {
+    $('cf2-topupMonth').textContent = '—';
+  }
+
+  // Debt — hardcoded from what we know (ค่าไฟ)
+  // Will be dynamic once Cashflow tab GID is configured
+  $('cf2-debt').textContent = '฿86,731';
+  $('cf2-debtEmpty').style.display='none';
+  $('cf2-debtBody').innerHTML=
+    '<tr><td>ค่าไฟ (ยังไม่ได้จ่าย)</td>' +
+    '<td style="text-align:right;color:var(--red);">฿86,731</td>' +
+    '<td>—</td>' +
+    '<td><span style="background:rgba(248,81,73,.15);color:var(--red);padding:2px 7px;border-radius:8px;font-size:11px;">ค้างจ่าย</span></td>' +
+    '<td style="color:var(--muted);">จ่ายจากกสิกร</td></tr>';
 }
 
 // ══════════════════════════════════════════════
