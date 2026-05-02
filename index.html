@@ -173,9 +173,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <div class="section-bar" style="justify-content:space-between;align-items:center;padding-right:16px;">
   <div style="display:flex;gap:0;">
     <button class="sec-btn active" onclick="switchSection('restaurant',this)">🍜 ร้านอาหาร</button>
+    <button class="sec-btn" onclick="switchSection('cashflow',this)">💵 Cashflow</button>
     <button class="sec-btn" onclick="switchSection('wedding',this)">💍 Wedding</button>
     <button class="sec-btn" onclick="switchSection('central',this)">🏦 กองกลาง</button>
-    <button class="sec-btn" onclick="switchSection('cashflow',this)">💵 Cashflow</button>
     <button class="sec-btn" onclick="switchSection('growth',this)">📈 เปรียบเทียบเดือน</button>
     <button class="sec-btn" onclick="switchSection('months',this)" id="mmBtn">⚙ จัดการเดือน</button>
   </div>
@@ -520,6 +520,14 @@ tr:hover td{background:rgba(255,255,255,.02);}
 
 <!-- ═══ CASHFLOW SECTION ═══ -->
 <div id="sec-cashflow" class="wrap" style="display:none;">
+
+  <!-- Month indicator -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div style="font-size:13px;color:var(--muted);">ดูข้อมูลเดือน: <span id="cf2-monthLabel" style="color:var(--text);font-weight:600;">—</span></div>
+    <select onchange="switchMonth(this.value)" id="cf2-monthSelect"
+      style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:12px;cursor:pointer;">
+    </select>
+  </div>
 
   <!-- ROW 1: ยอดปัจจุบัน vs ยอดสิ้นเดือน -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
@@ -1502,11 +1510,15 @@ function showTab(name, section, btn) {
 let monthData = {};
 
 function buildMonthSelect() {
+  const opts = MONTHS.map((m,i)=>`<option value="${i}">${m.label}</option>`).join('');
   const sel = $('monthSelect');
-  sel.innerHTML = MONTHS.map((m,i)=>
-    `<option value="${i}">${m.label}</option>`
-  ).join('');
+  sel.innerHTML = opts;
   sel.value = currentMonthIdx;
+  // sync cashflow month selector
+  const cf2sel = $('cf2-monthSelect');
+  if(cf2sel) { cf2sel.innerHTML = opts; cf2sel.value = currentMonthIdx; }
+  const cf2lbl = $('cf2-monthLabel');
+  if(cf2lbl && MONTHS[currentMonthIdx]) cf2lbl.textContent = MONTHS[currentMonthIdx].label;
 }
 
 async function switchMonth(idx) {
@@ -2701,14 +2713,14 @@ function closeWmModal() {
 // INIT
 // ══════════════════════════════════════════════
 window.onload = async () => {
-  // โหลด Config Sheet ก่อน — ดึงรายชื่อเดือนทั้งหมด
   $('loadTxt').textContent = 'กำลังโหลด config...';
   await loadConfigSheet();
-  // merge localStorage extras (ถ้ามี)
   loadSavedMonths();
-  // set initial month
-  SHEET_ID = MONTHS[0].sheetId;
-  GIDS     = MONTHS[0].gids;
+  // default เป็นเดือนล่าสุด
+  const latestIdx = MONTHS.length - 1;
+  currentMonthIdx = latestIdx;
+  SHEET_ID = MONTHS[latestIdx].sheetId;
+  GIDS     = MONTHS[latestIdx].gids;
   buildMonthSelect();
   loadAll();
 };
