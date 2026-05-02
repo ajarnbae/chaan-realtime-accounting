@@ -1952,18 +1952,22 @@ function renderCashflow(data) {
     }
     if(dataStart<0) dataStart=8;
 
+    const THAI_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const isMonthLabel = s => THAI_MONTHS.some(m => s.indexOf(m) >= 0);
+
     const monthRows=[];
     for(let i=dataStart;i<cfMonthRows.length;i++){
       const r=cfMonthRows[i]||[];
       const label=(r[0]||'').trim();
+      if(!isMonthLabel(label)) continue;
       const bal=parseNum(r[1]);
-      if(!label||label.indexOf('บันทึก')>=0||label==='#') continue;
-      if(!bal&&bal!==0) continue;
       monthRows.push({label,bal,note:(r[7]||'').trim()});
     }
 
-    if(monthRows.length > 0) {
-      const last = monthRows[monthRows.length - 1];
+    // ดึงเดือนล่าสุดที่มียอดจริง (bal > 0) — auto sync เมื่อมีเดือนใหม่
+    const validRows = monthRows.filter(r => r.bal > 0);
+    if(validRows.length > 0) {
+      const last = validRows[validRows.length - 1];
       const eomGap = last.bal - CF_TARGET;
       const eomPct = Math.min(100, Math.max(0, (last.bal / CF_TARGET) * 100));
       const eomOk = last.bal >= CF_TARGET;
