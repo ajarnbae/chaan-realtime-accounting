@@ -2400,31 +2400,24 @@ function renderWeddingMaster() {
   });
 
   // ── Parse summary tab for "ยังไม่โอนกสิกร" per booking ──
+  // Structure: data rows start at index 23, 14 cols
+  // col 0=ชื่อลูกค้า, 9=ยอดโอนกสิกร, 10=วันที่โอนกสิกร, 12=ยังไม่โอน
   const S = weddingMasterData.summary || [];
-  const sHdrIdx = findHdr(S,'ชื่อลูกค้า','ยังไม่โอน');
-  const sH = S[sHdrIdx] || [];
-  const sF = kw => sH.findIndex(h=>(h||'').indexOf(kw)>=0);
-  const sNameI    = sF('ชื่อลูกค้า');
-  const sPendingI = sF('ยังไม่โอน');   // col M "ยังไม่โอนกสิกร"
-  const sDateI    = sF('วันจัดงาน');
+  const DATA_START = 23;
 
-  // Find kbank transfer columns
-  const sKbankDateI   = sH.findIndex(h=>(h||'').indexOf('วันที่โอน')>=0);
-  const sKbankAmtI    = sH.findIndex(h=>(h||'').indexOf('ยอดโอน')>=0);
-
-  // Build map: name → { pending, transferDate, transferAmount, transferred }
   const summaryMap = {};
-  for(let i=sHdrIdx+1; i<S.length; i++){
+  for(let i=DATA_START; i<S.length; i++){
     const row=S[i]||[];
-    const name=(row[sNameI]||'').trim();
+    const name=(row[0]||'').trim();
     if(!name) continue;
-    const tDate = sKbankDateI>=0 ? (row[sKbankDateI]||'').trim() : '';
-    const tAmt  = sKbankAmtI>=0 ? parseNum(row[sKbankAmtI]) : 0;
+    const tAmt  = parseNum(row[9]);
+    const tDate = (row[10]||'').trim();
+    const pending = parseNum(row[12]);
     summaryMap[name] = {
-      pending:         parseNum(row[sPendingI]),
-      transferDate:    tDate,
-      transferAmount:  tAmt,
-      transferred:     tDate !== '' && tAmt > 0,
+      pending,
+      transferDate:   tDate,
+      transferAmount: tAmt,
+      transferred:    tDate !== '' && tAmt > 0,
     };
   }
 
