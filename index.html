@@ -2313,7 +2313,7 @@ function fmtDateFull(d) {
 }
 
 function findHdr(rows, ...keywords) {
-  for(let i=0;i<Math.min(10,rows.length);i++){
+  for(let i=0;i<Math.min(20,rows.length);i++){
     const j = (rows[i]||[]).join('|');
     if(keywords.every(kw => j.indexOf(kw) >= 0)) return i;
   }
