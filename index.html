@@ -1864,6 +1864,7 @@ function switchSection(sec, btn) {
   $('sec-restaurant').style.display = sec==='restaurant'?'block':'none';
   $('sec-wedding').style.display    = sec==='wedding'?'block':'none';
   $('sec-central').style.display    = sec==='central'?'block':'none';
+  $('sec-cashflow').style.display   = sec==='cashflow'?'block':'none';
   $('sec-growth').style.display     = sec==='growth'?'block':'none';
   $('sec-months').style.display     = sec==='months'?'block':'none';
   document.querySelectorAll('.sec-btn').forEach(b=>b.classList.remove('active'));
@@ -2052,14 +2053,9 @@ function renderCashflow(data) {
   }
 
   // ── Debt (hardcoded ค่าไฟ — แก้เป็น dynamic ได้ทีหลัง) ──
-  $('cf2-debt').textContent = '฿86,731';
-  $('cf2-debtEmpty').style.display='none';
-  $('cf2-debtBody').innerHTML=
-    '<tr><td>ค่าไฟ (ยังไม่ได้จ่าย)</td>' +
-    '<td style="text-align:right;color:var(--red);">฿86,731</td>' +
-    '<td>—</td>' +
-    '<td><span style="background:rgba(248,81,73,.15);color:var(--red);padding:2px 7px;border-radius:8px;font-size:11px;">ค้างจ่าย</span></td>' +
-    '<td style="color:var(--muted);">จ่ายจากกสิกร</td></tr>';
+  $('cf2-debt').textContent = '—';
+  $('cf2-debtEmpty').style.display='block';
+  $('cf2-debtBody').innerHTML='';
 }
 
 // ══════════════════════════════════════════════
