@@ -1966,28 +1966,30 @@ function renderCashflow(data) {
   }
 
   // ── Cashflow tab (Central Fund): ยอดสิ้นเดือนรายเดือน ──
+  // Structure: row 1-7 = title/header junk, row 8 = column headers, row 9+ = monthly data
+  // CSV columns: A=เดือน(0), B=ยอดคงเหลือกสิกร(1), D=ขาด/เกิน(3), H=หมายเหตุ(7)
   const cfMonthEl = $('cf2-monthTable');
   const cfMonthEmptyEl = $('cf2-monthEmpty');
-  if(cfMonthRows && cfMonthRows.length > 1) {
-    // หา header row
-    let hI = -1;
-    for(let i=0;i<Math.min(5,cfMonthRows.length);i++){
-      const s=(cfMonthRows[i]||[]).join('|');
-      if(s.indexOf('เดือน')>=0||s.indexOf('ยอด')>=0||s.indexOf('Month')>=0){hI=i;break;}
+  if(cfMonthRows && cfMonthRows.length > 8) {
+    // หา row ที่มี "เดือน" ใน col A (คือ row header จริงๆ = row index 7)
+    let dataStart = -1;
+    for(let i=0;i<cfMonthRows.length;i++){
+      const cell=(cfMonthRows[i][0]||'').trim();
+      if(cell==='เดือน'){dataStart=i+1;break;}
     }
-    if(hI<0) hI=0;
-    const hdr=cfMonthRows[hI]||[];
-    const mI=hdr.findIndex(h=>(h||'').match(/เดือน|month/i));
-    const bI=hdr.findIndex(h=>(h||'').match(/ยอด|balance|คงเหลือ/i));
-    const nI=hdr.findIndex(h=>(h||'').match(/หมายเหตุ|note/i));
+    if(dataStart<0) dataStart=8; // fallback: skip 8 rows
 
     const monthRows=[];
-    for(let i=hI+1;i<cfMonthRows.length;i++){
+    for(let i=dataStart;i<cfMonthRows.length;i++){
       const r=cfMonthRows[i]||[];
-      const label=(r[mI>=0?mI:0]||'').trim();
-      const bal=parseNum(r[bI>=0?bI:1]);
-      if(!label&&!bal) continue;
-      monthRows.push({label,bal,note:(r[nI>=0?nI:2]||'').trim()});
+      const label=(r[0]||'').trim();
+      const bal=parseNum(r[1]);
+      const note=(r[7]||'').trim();
+      // skip rows ที่ไม่มีชื่อเดือน หรือเป็น section header
+      if(!label || label.indexOf('บันทึก')>=0 || label==='#') continue;
+      // skip rows ที่ยอดว่าง (เดือนที่ยังไม่มีข้อมูล)
+      if(!bal && bal!==0) continue;
+      monthRows.push({label,bal,note});
     }
 
     if(monthRows.length===0){
@@ -1996,7 +1998,7 @@ function renderCashflow(data) {
     } else {
       cfMonthEmptyEl.style.display='none';
       cfMonthEl.innerHTML=monthRows.slice().reverse().map(r=>{
-        const c=r.bal>=0?'var(--green)':'var(--red)';
+        const c=r.bal>=CF_TARGET?'var(--green)':r.bal>0?'var(--yellow)':'var(--red)';
         return '<tr><td>'+r.label+'</td><td style="text-align:right;color:'+c+';font-weight:600;">'+fmtFull(r.bal)+'</td><td style="color:var(--muted);">'+r.note+'</td></tr>';
       }).join('');
     }
