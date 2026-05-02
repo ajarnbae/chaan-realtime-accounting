@@ -521,66 +521,49 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <!-- ═══ CASHFLOW SECTION ═══ -->
 <div id="sec-cashflow" class="wrap" style="display:none;">
 
-  <!-- BIG KPI -->
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-      <div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;">ยอดคงเหลือกสิกรปัจจุบัน</div>
-        <div id="cf2-balance" style="font-size:40px;font-weight:700;color:var(--blue);line-height:1.1;">—</div>
-        <div id="cf2-balanceSub" style="font-size:12px;color:var(--muted2);margin-top:4px;">—</div>
-      </div>
-      <div style="text-align:right;">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Target</div>
-        <div style="font-size:24px;font-weight:600;color:var(--muted2);">฿500,000</div>
-        <div id="cf2-status" style="margin-top:6px;font-size:13px;font-weight:600;">—</div>
+  <!-- ROW 1: ยอดปัจจุบัน vs ยอดสิ้นเดือน -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">ยอดปัจจุบัน (real-time)</div>
+      <div id="cf2-balance" style="font-size:32px;font-weight:700;color:var(--blue);line-height:1.1;">—</div>
+      <div id="cf2-balanceSub" style="font-size:12px;color:var(--muted2);margin-top:6px;">จาก kbal — Summary เดือนนี้</div>
+      <div style="margin-top:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;">
+          <span>0</span><span id="cf2-pct">—</span><span>฿500K</span>
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;height:8px;overflow:hidden;">
+          <div id="cf2-bar" style="height:100%;border-radius:8px;background:var(--green);transition:width .4s;width:0%;"></div>
+        </div>
       </div>
     </div>
-    <!-- Progress bar -->
-    <div style="margin-top:14px;">
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px;">
-        <span>0</span><span id="cf2-pct">—</span><span>฿500K</span>
-      </div>
-      <div style="background:var(--bg3);border-radius:8px;height:12px;overflow:hidden;">
-        <div id="cf2-bar" style="height:100%;border-radius:8px;background:var(--green);transition:width .4s;width:0%;"></div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;">ยอดสิ้นเดือนล่าสุด (Central Fund)</div>
+      <div id="cf2-eom-balance" style="font-size:32px;font-weight:700;color:var(--green);line-height:1.1;">—</div>
+      <div id="cf2-eom-label" style="font-size:12px;color:var(--muted2);margin-top:6px;">—</div>
+      <div style="margin-top:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;">
+          <span>0</span><span id="cf2-eom-pct">—</span><span>฿500K</span>
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;height:8px;overflow:hidden;">
+          <div id="cf2-eom-bar" style="height:100%;border-radius:8px;background:var(--green);transition:width .4s;width:0%;"></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- METRICS -->
-  <div class="metrics">
-    <div class="mc g">
-      <div class="mc-lbl">ยอดคงเหลือ (ปัจจุบัน)</div>
-      <div class="mc-val" id="cf2-current">—</div>
+  <!-- ROW 2: 3 metrics -->
+  <div class="metrics" style="margin-bottom:12px;">
+    <div class="mc b">
+      <div class="mc-lbl">Target</div>
+      <div class="mc-val" id="cf2-target">฿500K</div>
     </div>
     <div class="mc r">
-      <div class="mc-lbl">ขาด / เกิน target</div>
+      <div class="mc-lbl">ขาด / เกิน (ปัจจุบัน)</div>
       <div class="mc-val" id="cf2-gap">—</div>
     </div>
-    <div class="mc y">
-      <div class="mc-lbl">เติมแล้วเดือนนี้</div>
-      <div class="mc-val" id="cf2-topupMonth">—</div>
-    </div>
-    <div class="mc b">
-      <div class="mc-lbl">หนี้ค้างจ่ายรวม</div>
-      <div class="mc-val" id="cf2-debt">—</div>
-    </div>
-  </div>
-
-  <!-- MONTHLY BALANCE (จาก Cashflow tab ใน Central Fund) -->
-  <div class="card" style="margin-top:12px;">
-    <div class="card-title" style="color:var(--teal)">📅 ยอดคงเหลือสิ้นเดือน (จาก Central Fund)</div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr>
-          <th>เดือน</th>
-          <th style="width:150px;text-align:right;">ยอดคงเหลือ</th>
-          <th>หมายเหตุ</th>
-        </tr></thead>
-        <tbody id="cf2-monthTable"></tbody>
-      </table>
-    </div>
-    <div id="cf2-monthEmpty" style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">
-      ยังไม่มีข้อมูลยอดสิ้นเดือน
+    <div class="mc r">
+      <div class="mc-lbl">ขาด / เกิน (สิ้นเดือน)</div>
+      <div class="mc-val" id="cf2-eom-gap">—</div>
     </div>
   </div>
 
@@ -1939,72 +1922,66 @@ function renderCashflow(data) {
   const cfMonthRows = (data && data.cfMonthRows) || null;
   const topupRows   = (data && data.topupRows)   || centralFundData || null;
 
-  // ── BIG KPI: ยอดจริง ณ ปัจจุบัน (s-kbal) ──
+  // ── Card ซ้าย: ยอดปัจจุบัน (s-kbal) ──
   if(balanceNow !== null) {
     const gap = balanceNow - CF_TARGET;
     const pct = Math.min(100, Math.max(0, (balanceNow / CF_TARGET) * 100));
     const sufficient = balanceNow >= CF_TARGET;
     $('cf2-balance').textContent = fmtFull(balanceNow);
     $('cf2-balance').style.color = sufficient ? 'var(--green)' : 'var(--red)';
-    $('cf2-balanceSub').textContent = 'ยอดคงเหลือกสิกร ณ ปัจจุบัน (จาก Summary เดือนนี้)';
-    $('cf2-status').textContent = sufficient ? '✅ Cashflow เพียงพอ' : '⚠️ Cashflow ขาด ' + fmtFull(Math.abs(gap));
-    $('cf2-status').style.color = sufficient ? 'var(--green)' : 'var(--red)';
     $('cf2-pct').textContent = pct.toFixed(1) + '%';
     $('cf2-bar').style.width = pct + '%';
     $('cf2-bar').style.background = sufficient ? 'var(--green)' : gap > -100000 ? 'var(--yellow)' : 'var(--red)';
-    $('cf2-current').textContent = fmtShort(balanceNow);
-    $('cf2-current').style.color = sufficient ? 'var(--green)' : 'var(--red)';
     $('cf2-gap').textContent = (gap >= 0 ? '+' : '') + fmtShort(gap);
     $('cf2-gap').style.color = gap >= 0 ? 'var(--green)' : 'var(--red)';
+    $('cf2-gap').closest('.mc').className = 'mc ' + (gap >= 0 ? 'g' : 'r');
   } else {
     $('cf2-balance').textContent = '—';
-    $('cf2-balanceSub').textContent = 'โหลดข้อมูล Summary เดือนนี้ก่อน แล้วกลับมาที่ Cashflow';
-    $('cf2-status').textContent = '—';
+    $('cf2-balanceSub').textContent = 'โหลดข้อมูล Summary เดือนนี้ก่อน';
     $('cf2-pct').textContent = '—';
-    $('cf2-current').textContent = '—';
     $('cf2-gap').textContent = '—';
   }
 
-  // ── Cashflow tab (Central Fund): ยอดสิ้นเดือนรายเดือน ──
-  // Structure: row 1-7 = title/header junk, row 8 = column headers, row 9+ = monthly data
+  // ── Card ขวา: ยอดสิ้นเดือนล่าสุด (Central Fund Cashflow tab) ──
+  // Structure: หา header row ที่มี "เดือน" ใน col A แล้วอ่านข้อมูลถัดไป
   // CSV columns: A=เดือน(0), B=ยอดคงเหลือกสิกร(1), D=ขาด/เกิน(3), H=หมายเหตุ(7)
-  const cfMonthEl = $('cf2-monthTable');
-  const cfMonthEmptyEl = $('cf2-monthEmpty');
   if(cfMonthRows && cfMonthRows.length > 8) {
-    // หา row ที่มี "เดือน" ใน col A (คือ row header จริงๆ = row index 7)
     let dataStart = -1;
     for(let i=0;i<cfMonthRows.length;i++){
-      const cell=(cfMonthRows[i][0]||'').trim();
-      if(cell==='เดือน'){dataStart=i+1;break;}
+      if((cfMonthRows[i][0]||'').trim()==='เดือน'){dataStart=i+1;break;}
     }
-    if(dataStart<0) dataStart=8; // fallback: skip 8 rows
+    if(dataStart<0) dataStart=8;
 
     const monthRows=[];
     for(let i=dataStart;i<cfMonthRows.length;i++){
       const r=cfMonthRows[i]||[];
       const label=(r[0]||'').trim();
       const bal=parseNum(r[1]);
-      const note=(r[7]||'').trim();
-      // skip rows ที่ไม่มีชื่อเดือน หรือเป็น section header
-      if(!label || label.indexOf('บันทึก')>=0 || label==='#') continue;
-      // skip rows ที่ยอดว่าง (เดือนที่ยังไม่มีข้อมูล)
-      if(!bal && bal!==0) continue;
-      monthRows.push({label,bal,note});
+      if(!label||label.indexOf('บันทึก')>=0||label==='#') continue;
+      if(!bal&&bal!==0) continue;
+      monthRows.push({label,bal,note:(r[7]||'').trim()});
     }
 
-    if(monthRows.length===0){
-      cfMonthEl.innerHTML='';
-      cfMonthEmptyEl.style.display='block';
+    if(monthRows.length > 0) {
+      const last = monthRows[monthRows.length - 1];
+      const eomGap = last.bal - CF_TARGET;
+      const eomPct = Math.min(100, Math.max(0, (last.bal / CF_TARGET) * 100));
+      const eomOk = last.bal >= CF_TARGET;
+      $('cf2-eom-balance').textContent = fmtFull(last.bal);
+      $('cf2-eom-balance').style.color = eomOk ? 'var(--green)' : 'var(--red)';
+      $('cf2-eom-label').textContent = last.label;
+      $('cf2-eom-pct').textContent = eomPct.toFixed(1) + '%';
+      $('cf2-eom-bar').style.width = eomPct + '%';
+      $('cf2-eom-bar').style.background = eomOk ? 'var(--green)' : eomGap > -100000 ? 'var(--yellow)' : 'var(--red)';
+      $('cf2-eom-gap').textContent = (eomGap >= 0 ? '+' : '') + fmtShort(eomGap);
+      $('cf2-eom-gap').style.color = eomGap >= 0 ? 'var(--green)' : 'var(--red)';
+      $('cf2-eom-gap').closest('.mc').className = 'mc ' + (eomGap >= 0 ? 'g' : 'r');
     } else {
-      cfMonthEmptyEl.style.display='none';
-      cfMonthEl.innerHTML=monthRows.slice().reverse().map(r=>{
-        const c=r.bal>=CF_TARGET?'var(--green)':r.bal>0?'var(--yellow)':'var(--red)';
-        return '<tr><td>'+r.label+'</td><td style="text-align:right;color:'+c+';font-weight:600;">'+fmtFull(r.bal)+'</td><td style="color:var(--muted);">'+r.note+'</td></tr>';
-      }).join('');
+      $('cf2-eom-balance').textContent = '—';
+      $('cf2-eom-label').textContent = 'ยังไม่มีข้อมูลสิ้นเดือน';
+      $('cf2-eom-pct').textContent = '—';
+      $('cf2-eom-gap').textContent = '—';
     }
-  } else {
-    if(cfMonthEl) cfMonthEl.innerHTML='';
-    if(cfMonthEmptyEl) cfMonthEmptyEl.style.display='block';
   }
 
   // ── Top-up log (บันทึกรายการ tab) ──
