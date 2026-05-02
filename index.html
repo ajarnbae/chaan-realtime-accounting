@@ -549,7 +549,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <!-- METRICS -->
   <div class="metrics">
     <div class="mc g">
-      <div class="mc-lbl">ยอดคงเหลือ</div>
+      <div class="mc-lbl">ยอดคงเหลือ (ปัจจุบัน)</div>
       <div class="mc-val" id="cf2-current">—</div>
     </div>
     <div class="mc r">
@@ -563,6 +563,24 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div class="mc b">
       <div class="mc-lbl">หนี้ค้างจ่ายรวม</div>
       <div class="mc-val" id="cf2-debt">—</div>
+    </div>
+  </div>
+
+  <!-- MONTHLY BALANCE (จาก Cashflow tab ใน Central Fund) -->
+  <div class="card" style="margin-top:12px;">
+    <div class="card-title" style="color:var(--teal)">📅 ยอดคงเหลือสิ้นเดือน (จาก Central Fund)</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>เดือน</th>
+          <th style="width:150px;text-align:right;">ยอดคงเหลือ</th>
+          <th>หมายเหตุ</th>
+        </tr></thead>
+        <tbody id="cf2-monthTable"></tbody>
+      </table>
+    </div>
+    <div id="cf2-monthEmpty" style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">
+      ยังไม่มีข้อมูลยอดสิ้นเดือน
     </div>
   </div>
 
@@ -755,6 +773,8 @@ const CONFIG_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT527_JQ
 // Central Fund Sheet — published sheetId (ชีทเดียว ใช้ทุกเดือน)
 let CENTRAL_FUND_SHEET_ID = '';
 let centralFundData = null;
+let CF_GID_LOG      = '1035647388'; // tab: บันทึกรายการ (fallback)
+let CF_GID_CASHFLOW = '175879957';  // tab: cashflow (fallback — อ่านจาก Config Sheet ถ้ามี)
 
 // Wedding Master Sheet — ชีทเดียว 3 tabs: งาน / การชำระเงิน / ค่าใช้จ่าย
 let WEDDING_MASTER = { sheetId:'', gBookings:'', gPayments:'', gExpenses:'', gSummary:'' };
@@ -815,6 +835,7 @@ async function loadConfigSheet() {
           iED=gi('expDetail'), iES=gi('expSum'),
           iWS=gi('weddingSum'), iWI=gi('weddingIn'), iWO=gi('weddingOut'),
           iCF=gi('centralFund'),
+          iCFLog=gi('cfLogGid'), iCFCash=gi('cfCashflowGid'),
           iWM=gi('weddingMaster'),
           iWMB=gi('wmBookings'), iWMP=gi('wmPayments'), iWMX=gi('wmExpenses'), iWMS=gi('wmSummary');
 
@@ -836,6 +857,16 @@ async function loadConfigSheet() {
     if(iCF >= 0) {
       const cfRow = rows.slice(1).find(r => r[iCF] && r[iCF].trim());
       if(cfRow) CENTRAL_FUND_SHEET_ID = cfRow[iCF].trim();
+    }
+
+    // Extract CF GIDs (cfLogGid, cfCashflowGid) — override fallback values
+    if(iCFLog >= 0) {
+      const r = rows.slice(1).find(r => r[iCFLog] && r[iCFLog].trim());
+      if(r) CF_GID_LOG = r[iCFLog].trim();
+    }
+    if(iCFCash >= 0) {
+      const r = rows.slice(1).find(r => r[iCFCash] && r[iCFCash].trim());
+      if(r) CF_GID_CASHFLOW = r[iCFCash].trim();
     }
 
     // Extract Wedding Master sheetId + GIDs (ใช้ชีทกลางเดียว)
@@ -1854,22 +1885,37 @@ let cashflowData = null;
 const CF_TARGET = 500000;
 
 async function loadCashflow(force) {
-  if(!CENTRAL_FUND_SHEET_ID) return;
-  if(cashflowData && !force) { renderCashflow(cashflowData); return; }
+  // ยอดจริง ณ ปัจจุบัน — จาก s-kbal (DOM) ซึ่งโหลดมาจาก Summary เดือนนี้
+  const kbalNow = getCashflowBalance();
 
-  const t = Date.now();
-  // Cashflow tab is tab 3 in Central Fund sheet — try gid via fetch
-  // Since we don't have a separate gid config, we fetch the whole published doc
-  // The Cashflow tab is the 3rd tab — but gid is unknown
-  // Fallback: use "ยอดคงเหลือกสิกร" from Summary sheet + load cashflow log from Central Fund
-  // We'll use the Central Fund sheet's first tab (บันทึกรายการ) for top-up log
+  // ถ้าไม่มี CENTRAL_FUND_SHEET_ID → แสดงแค่ยอดจาก s-kbal พร้อม placeholder
+  if(!CENTRAL_FUND_SHEET_ID) {
+    renderCashflow({ balanceNow: kbalNow, cfMonthRows: null, topupRows: null });
+    return;
+  }
 
-  // For balance: pull from current month's Summary (GIDS.summary already loaded in D)
-  const balance = D.summary ? getCashflowBalance() : null;
+  if(cashflowData && !force) {
+    renderCashflow({ ...cashflowData, balanceNow: kbalNow });
+    return;
+  }
 
-  // For top-up log: try fetching Cashflow tab (need user to set gid)
-  // For now, render with what we have from D.kbankIn (s-kbal)
-  renderCashflow({ balance });
+  const bust = Date.now();
+  const baseUrl = 'https://docs.google.com/spreadsheets/d/e/' + CENTRAL_FUND_SHEET_ID;
+
+  // Fetch tab Cashflow (ยอดสิ้นเดือน) และ tab บันทึกรายการ (top-up log) พร้อมกัน
+  const [cfCsv, logCsv] = await Promise.all([
+    fetchCSVWithTimeout(baseUrl + '/pub?output=csv&gid=' + CF_GID_CASHFLOW + '&t=' + bust, 10000),
+    fetchCSVWithTimeout(baseUrl + '/pub?output=csv&gid=' + CF_GID_LOG      + '&t=' + bust, 10000),
+  ]);
+
+  const cfRows  = cfCsv  ? parseCSV(cfCsv)  : null;
+  const logRows = logCsv ? parseCSV(logCsv) : null;
+
+  // Cache central fund log ด้วย (ใช้ร่วมกับ Central Fund tab)
+  if(logRows) centralFundData = logRows;
+
+  cashflowData = { cfMonthRows: cfRows, topupRows: logRows };
+  renderCashflow({ ...cashflowData, balanceNow: kbalNow });
 }
 
 function getCashflowBalance() {
@@ -1888,50 +1934,93 @@ function getCashflowBalance() {
 }
 
 function renderCashflow(data) {
-  const balance = data && data.balance != null ? data.balance : getCashflowBalance();
+  const balanceNow  = (data && data.balanceNow  != null) ? data.balanceNow  : getCashflowBalance();
+  const cfMonthRows = (data && data.cfMonthRows) || null;
+  const topupRows   = (data && data.topupRows)   || centralFundData || null;
 
-  if(balance === null) {
+  // ── BIG KPI: ยอดจริง ณ ปัจจุบัน (s-kbal) ──
+  if(balanceNow !== null) {
+    const gap = balanceNow - CF_TARGET;
+    const pct = Math.min(100, Math.max(0, (balanceNow / CF_TARGET) * 100));
+    const sufficient = balanceNow >= CF_TARGET;
+    $('cf2-balance').textContent = fmtFull(balanceNow);
+    $('cf2-balance').style.color = sufficient ? 'var(--green)' : 'var(--red)';
+    $('cf2-balanceSub').textContent = 'ยอดคงเหลือกสิกร ณ ปัจจุบัน (จาก Summary เดือนนี้)';
+    $('cf2-status').textContent = sufficient ? '✅ Cashflow เพียงพอ' : '⚠️ Cashflow ขาด ' + fmtFull(Math.abs(gap));
+    $('cf2-status').style.color = sufficient ? 'var(--green)' : 'var(--red)';
+    $('cf2-pct').textContent = pct.toFixed(1) + '%';
+    $('cf2-bar').style.width = pct + '%';
+    $('cf2-bar').style.background = sufficient ? 'var(--green)' : gap > -100000 ? 'var(--yellow)' : 'var(--red)';
+    $('cf2-current').textContent = fmtShort(balanceNow);
+    $('cf2-current').style.color = sufficient ? 'var(--green)' : 'var(--red)';
+    $('cf2-gap').textContent = (gap >= 0 ? '+' : '') + fmtShort(gap);
+    $('cf2-gap').style.color = gap >= 0 ? 'var(--green)' : 'var(--red)';
+  } else {
     $('cf2-balance').textContent = '—';
-    $('cf2-balanceSub').textContent = 'โหลดข้อมูลกสิกรก่อน แล้วกลับมาที่ Cashflow';
-    return;
+    $('cf2-balanceSub').textContent = 'โหลดข้อมูล Summary เดือนนี้ก่อน แล้วกลับมาที่ Cashflow';
+    $('cf2-status').textContent = '—';
+    $('cf2-pct').textContent = '—';
+    $('cf2-current').textContent = '—';
+    $('cf2-gap').textContent = '—';
   }
 
-  const gap = balance - CF_TARGET;
-  const pct = Math.min(100, Math.max(0, (balance / CF_TARGET) * 100));
-  const sufficient = balance >= CF_TARGET;
+  // ── Cashflow tab (Central Fund): ยอดสิ้นเดือนรายเดือน ──
+  const cfMonthEl = $('cf2-monthTable');
+  const cfMonthEmptyEl = $('cf2-monthEmpty');
+  if(cfMonthRows && cfMonthRows.length > 1) {
+    // หา header row
+    let hI = -1;
+    for(let i=0;i<Math.min(5,cfMonthRows.length);i++){
+      const s=(cfMonthRows[i]||[]).join('|');
+      if(s.indexOf('เดือน')>=0||s.indexOf('ยอด')>=0||s.indexOf('Month')>=0){hI=i;break;}
+    }
+    if(hI<0) hI=0;
+    const hdr=cfMonthRows[hI]||[];
+    const mI=hdr.findIndex(h=>(h||'').match(/เดือน|month/i));
+    const bI=hdr.findIndex(h=>(h||'').match(/ยอด|balance|คงเหลือ/i));
+    const nI=hdr.findIndex(h=>(h||'').match(/หมายเหตุ|note/i));
 
-  $('cf2-balance').textContent = fmtFull(balance);
-  $('cf2-balance').style.color = sufficient ? 'var(--green)' : 'var(--red)';
-  $('cf2-balanceSub').textContent = 'ยอดคงเหลือกสิกรจาก Summary เดือนปัจจุบัน';
-  $('cf2-status').textContent = sufficient ? '✅ Cashflow เพียงพอ' : '⚠️ Cashflow ขาด ' + fmtFull(Math.abs(gap));
-  $('cf2-status').style.color = sufficient ? 'var(--green)' : 'var(--red)';
-  $('cf2-pct').textContent = pct.toFixed(1) + '%';
-  $('cf2-bar').style.width = pct + '%';
-  $('cf2-bar').style.background = sufficient ? 'var(--green)' : gap > -100000 ? 'var(--yellow)' : 'var(--red)';
+    const monthRows=[];
+    for(let i=hI+1;i<cfMonthRows.length;i++){
+      const r=cfMonthRows[i]||[];
+      const label=(r[mI>=0?mI:0]||'').trim();
+      const bal=parseNum(r[bI>=0?bI:1]);
+      if(!label&&!bal) continue;
+      monthRows.push({label,bal,note:(r[nI>=0?nI:2]||'').trim()});
+    }
 
-  $('cf2-current').textContent = fmtShort(balance);
-  $('cf2-current').style.color = sufficient ? 'var(--green)' : 'var(--red)';
-  $('cf2-gap').textContent = (gap >= 0 ? '+' : '') + fmtShort(gap);
-  $('cf2-gap').style.color = gap >= 0 ? 'var(--green)' : 'var(--red)';
+    if(monthRows.length===0){
+      cfMonthEl.innerHTML='';
+      cfMonthEmptyEl.style.display='block';
+    } else {
+      cfMonthEmptyEl.style.display='none';
+      cfMonthEl.innerHTML=monthRows.slice().reverse().map(r=>{
+        const c=r.bal>=0?'var(--green)':'var(--red)';
+        return '<tr><td>'+r.label+'</td><td style="text-align:right;color:'+c+';font-weight:600;">'+fmtFull(r.bal)+'</td><td style="color:var(--muted);">'+r.note+'</td></tr>';
+      }).join('');
+    }
+  } else {
+    if(cfMonthEl) cfMonthEl.innerHTML='';
+    if(cfMonthEmptyEl) cfMonthEmptyEl.style.display='block';
+  }
 
-  // Top-up log — from Central Fund บันทึกรายการ (already loaded)
-  if(centralFundData && centralFundData.length > 0) {
-    // Filter rows where type = เข้า (top-up entries)
+  // ── Top-up log (บันทึกรายการ tab) ──
+  if(topupRows && topupRows.length > 0) {
     let hdrIdx = -1;
-    for(let i=0;i<Math.min(10,centralFundData.length);i++){
-      const r=(centralFundData[i]||[]).join('|');
+    for(let i=0;i<Math.min(10,topupRows.length);i++){
+      const r=(topupRows[i]||[]).join('|');
       if(r.indexOf('วันที่')>=0 && r.indexOf('ประเภท')>=0){hdrIdx=i;break;}
     }
     if(hdrIdx>=0){
-      const hdr=centralFundData[hdrIdx]||[];
+      const hdr=topupRows[hdrIdx]||[];
       const dI=hdr.findIndex(h=>(h||'').indexOf('วันที่')>=0);
       const tI=hdr.findIndex(h=>(h||'').indexOf('ประเภท')>=0);
       const aI=hdr.findIndex(h=>(h||'').indexOf('จำนวน')>=0);
-      const rI=hdr.findIndex(h=>(h||'').indexOf('เหตุผล')>=0||h.indexOf('รายละเอียด')>=0);
+      const rI=hdr.findIndex(h=>(h||'').indexOf('เหตุผล')>=0||(h||'').indexOf('รายละเอียด')>=0);
 
-      const topups = [];
-      for(let i=hdrIdx+1;i<centralFundData.length;i++){
-        const row=centralFundData[i]||[];
+      const topups=[];
+      for(let i=hdrIdx+1;i<topupRows.length;i++){
+        const row=topupRows[i]||[];
         if((row[tI]||'').trim()==='เข้า' && parseNum(row[aI])>0){
           topups.push({date:(row[dI]||'').trim(),amt:parseNum(row[aI]),reason:(row[rI]||'').trim()});
         }
@@ -1953,7 +2042,7 @@ function renderCashflow(data) {
       } else {
         $('cf2-topupEmpty').style.display='none';
         $('cf2-topupBody').innerHTML=topups.slice().reverse().map(t=>{
-          const srcColor = t.reason.indexOf('กำไร')>=0?'var(--green)':t.reason.indexOf('กองกลาง')>=0?'var(--teal)':'var(--muted)';
+          const srcColor=t.reason.indexOf('กำไร')>=0?'var(--green)':t.reason.indexOf('กองกลาง')>=0?'var(--teal)':'var(--muted)';
           return '<tr><td>'+t.date+'</td><td>—</td><td style="color:'+srcColor+';">'+t.reason+'</td><td style="text-align:right;color:var(--green);font-weight:500;">+'+fmtFull(t.amt)+'</td><td>—</td></tr>';
         }).join('');
       }
@@ -1962,8 +2051,7 @@ function renderCashflow(data) {
     $('cf2-topupMonth').textContent = '—';
   }
 
-  // Debt — hardcoded from what we know (ค่าไฟ)
-  // Will be dynamic once Cashflow tab GID is configured
+  // ── Debt (hardcoded ค่าไฟ — แก้เป็น dynamic ได้ทีหลัง) ──
   $('cf2-debt').textContent = '฿86,731';
   $('cf2-debtEmpty').style.display='none';
   $('cf2-debtBody').innerHTML=
