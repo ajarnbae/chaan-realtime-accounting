@@ -723,9 +723,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
       <div class="mm-gid-row"><div class="mm-gid-lbl">กสิกร_สรุปรายจ่ายรายวัน</div><input class="mm-input" id="ng-kbankOut" placeholder="gid"></div>
       <div class="mm-gid-row"><div class="mm-gid-lbl">รายจ่ายใบรายการ</div><input class="mm-input" id="ng-expDetail" placeholder="gid"></div>
       <div class="mm-gid-row"><div class="mm-gid-lbl">สรุปค่าใช้จ่ายใบรายการ</div><input class="mm-input" id="ng-expSum" placeholder="gid"></div>
-      <div class="mm-gid-row"><div class="mm-gid-lbl">สรุป Wedding</div><input class="mm-input" id="ng-weddingSum" placeholder="gid"></div>
-      <div class="mm-gid-row"><div class="mm-gid-lbl">รายได้ Wedding</div><input class="mm-input" id="ng-weddingIn" placeholder="gid"></div>
-      <div class="mm-gid-row"><div class="mm-gid-lbl">รายจ่าย Wedding</div><input class="mm-input" id="ng-weddingOut" placeholder="gid"></div>
+      <div class="mm-gid-row"><div class="mm-gid-lbl">สรุป Wedding</div><input class="mm-input" id="ng-weddingSum" placeholder="gid" style="display:none"></div>
+      <div class="mm-gid-row"><div class="mm-gid-lbl">รายได้ Wedding</div><input class="mm-input" id="ng-weddingIn" placeholder="gid" style="display:none"></div>
+      <div class="mm-gid-row"><div class="mm-gid-lbl">รายจ่าย Wedding</div><input class="mm-input" id="ng-weddingOut" placeholder="gid" style="display:none"></div>
       <div class="mm-gid-row"><div class="mm-gid-lbl">Sheet ID (PACX-1v...)</div><input class="mm-input" id="ng-sheetId" placeholder="ดึงอัตโนมัติ"></div>
     </div>
 
@@ -776,12 +776,12 @@ const MONTHS_FALLBACK = [
   {
     label: 'เมษายน 2026',
     sheetId: '2PACX-1vQlrlkOZQrT6rn8uaC3cPzqA52lRkzBkDszAkhaS4hk-LzDdFYNDzeQWOoPX0HpQnXZtin3QS00a1pG',
-    gids: { summary:'239909121', restaurant:'196080681', kbankIn:'1961079333', kbankOut:'881911619', expDetail:'1607322378', expSum:'1477691262', weddingSum:'1098787073', weddingIn:'1980572075', weddingOut:'424100009' }
+    gids: { summary:'239909121', restaurant:'196080681', kbankIn:'1961079333', kbankOut:'881911619', expDetail:'1607322378', expSum:'1477691262' }
   },
   {
     label: 'พฤษภาคม 2026',
     sheetId: '2PACX-1vRfCIm_55i8LhRG2aAQPCdf83o5gj0b3azQwIWxj6dGWx9P03_BZxZY2K0CFjmbgiBPpXgiS0E8Kd69',
-    gids: { summary:'', restaurant:'', kbankIn:'', kbankOut:'', expDetail:'', expSum:'', weddingSum:'', weddingIn:'', weddingOut:'' }
+    gids: { summary:'', restaurant:'', kbankIn:'', kbankOut:'', expDetail:'', expSum:'' }
   },
 ];
 
@@ -839,8 +839,8 @@ async function loadConfigSheet() {
           summary:    r[iSum]||'',    restaurant: r[iRest]||'',
           kbankIn:    r[iKIn]||'',   kbankOut:   r[iKOut]||'',
           expDetail:  r[iED]||'',    expSum:     r[iES]||'',
-          weddingSum: r[iWS]||'',    weddingIn:  r[iWI]||'',
-          weddingOut: r[iWO]||'',
+          weddingSum: '',    weddingIn:  '',
+          weddingOut: '',
         }
       }));
 
@@ -1760,9 +1760,6 @@ async function autoDetectGIDs() {
     'kbankOut':   ['กสิกร_สรุปรายจ่ายรายวัน','กสิกร รายจ่าย','kbankOut'],
     'expDetail':  ['รายจ่ายใบรายการ','ใบรายการ','expDetail'],
     'expSum':     ['สรุปค่าใช้จ่ายใบรายการ','สรุปค่าใช้จ่าย','expSum'],
-    'weddingSum': ['สรุป Wedding','สรุปWedding','weddingSum'],
-    'weddingIn':  ['รายได้ Wedding','รายได้Wedding','weddingIn'],
-    'weddingOut': ['รายจ่าย Wedding','รายจ่ายWedding','weddingOut'],
   };
 
   // Try fetching pubhtml to find gids — Google embeds sheet names + gids in the HTML
@@ -1821,7 +1818,7 @@ function saveNewMonth() {
   if(!sid)   { $('saveStatus').textContent='ยังไม่มี Sheet ID — กด "ดึง GID" ก่อน'; $('saveStatus').style.color='var(--red)'; return; }
 
   const gids = {};
-  ['summary','restaurant','kbankIn','kbankOut','expDetail','expSum','weddingSum','weddingIn','weddingOut']
+  ['summary','restaurant','kbankIn','kbankOut','expDetail','expSum']
     .forEach(k => { gids[k] = $('ng-'+k).value.trim() || ''; });
 
   const emptyGids = Object.entries(gids).filter(([,v])=>!v).map(([k])=>k);
@@ -1847,7 +1844,7 @@ function saveNewMonth() {
 
 function clearNewMonthForm() {
   ['newSheetUrl','newMonthLabel','ng-summary','ng-restaurant','ng-kbankIn','ng-kbankOut',
-   'ng-expDetail','ng-expSum','ng-weddingSum','ng-weddingIn','ng-weddingOut','ng-sheetId']
+   'ng-expDetail','ng-expSum','ng-sheetId']
     .forEach(id => { const el=$(id); if(el) el.value=''; });
   $('detectStatus').textContent='';
   $('saveStatus').textContent='';
