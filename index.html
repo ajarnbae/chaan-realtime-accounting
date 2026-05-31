@@ -999,7 +999,7 @@ async function loadAll(silent=false) {
   }
   $('reloadBtn').innerHTML='<span style="display:inline-block;animation:spin .7s linear infinite">↻</span>';
 
-  const keys = Object.keys(currentGids);
+  const keys = Object.keys(currentGids).filter(k => currentGids[k] !== '');
 
   // โหลดทุก tab พร้อมกัน — ใช้ sheetId จาก snapshot ไม่ใช่ global
   // เพิ่ม timestamp เพื่อ bust proxy cache
