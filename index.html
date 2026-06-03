@@ -1947,12 +1947,15 @@ async function fetchSummaryForMonth(m) {
   if(!csv) return null;
   const rows = parseCSV(csv);
   const get  = i => parseNum(rows[i]?.[1]);
+  // หา row "เงินเบิกจากกองกลาง" โดย match label ใน col A
+  const cfDrawRow = rows.find(r => (r[0]||'').includes('เงินเบิก') || (r[0]||'').includes('กองกลาง'));
+  const cfDraw = cfDrawRow ? parseNum(cfDrawRow[1]) : 0;
   const data = {
     income:  get(2),
     expense: get(3),
     net:     get(4),
     kbal:    get(5),
-    cfDraw:  get(0), // เงินเบิกจากกองกลาง
+    cfDraw,
   };
   plCache[m.label] = data;
   return data;
