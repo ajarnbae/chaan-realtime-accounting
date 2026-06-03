@@ -173,9 +173,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <div class="section-bar" style="justify-content:space-between;align-items:center;padding-right:16px;">
   <div style="display:flex;gap:0;">
     <button class="sec-btn active" onclick="switchSection('restaurant',this)">🍜 ร้านอาหาร</button>
-    <button class="sec-btn" onclick="switchSection('cashflow',this)">💵 Cashflow</button>
     <button class="sec-btn" onclick="switchSection('wedding',this)">💍 Wedding</button>
     <button class="sec-btn" onclick="switchSection('central',this)">🏦 กองกลาง</button>
+    <button class="sec-btn" onclick="switchSection('cashflow',this)">💵 Cashflow - P&L</button>
     <button class="sec-btn" onclick="switchSection('growth',this)">📈 เปรียบเทียบเดือน</button>
     <button class="sec-btn" onclick="switchSection('months',this)" id="mmBtn">⚙ จัดการเดือน</button>
   </div>
@@ -527,6 +527,62 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <select onchange="switchCf2Month(this.value)" id="cf2-monthSelect"
       style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:12px;cursor:pointer;">
     </select>
+  </div>
+
+  <!-- ★ P&L SUMMARY BOXES -->
+  <div id="plSummaryBox" style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:12px;display:none;">
+    <div style="font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.05em;text-transform:uppercase;margin-bottom:12px;">สรุปผลประกอบการ — <span id="pl-monthLabel">—</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;">
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">รายได้</div>
+        <div id="pl-income" style="font-size:18px;font-weight:700;color:var(--green);">—</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">รายจ่าย</div>
+        <div id="pl-expense" style="font-size:18px;font-weight:700;color:var(--red);">—</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">P&L เดือนนี้</div>
+        <div id="pl-net" style="font-size:18px;font-weight:700;">—</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">ดึงกองกลาง</div>
+        <div id="pl-cf-draw" style="font-size:18px;font-weight:700;color:var(--yellow);">—</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;border:1px solid rgba(248,81,73,.35);">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">ขาดทุนสุทธิรวม</div>
+        <div id="pl-total-loss" style="font-size:18px;font-weight:700;color:var(--red);">—</div>
+        <div style="font-size:10px;color:var(--muted2);margin-top:3px;">P&L + กองกลางที่ดึง</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">ขาด cashflow 500K</div>
+        <div id="pl-cf-gap" style="font-size:18px;font-weight:700;">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ★ P&L MONTHLY TABLE -->
+  <div class="card" style="margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div class="card-title" style="color:var(--blue);margin-bottom:0;">📊 P&L รายเดือน + สะสม</div>
+      <div id="plTableLoading" style="font-size:11px;color:var(--muted);display:none;">กำลังโหลด...</div>
+    </div>
+    <div class="tbl-wrap">
+      <table style="table-layout:fixed;">
+        <thead><tr>
+          <th style="width:100px;">เดือน</th>
+          <th style="width:110px;text-align:right;">รายได้</th>
+          <th style="width:110px;text-align:right;">รายจ่าย</th>
+          <th style="width:110px;text-align:right;">P&L</th>
+          <th style="width:110px;text-align:right;">P&L สะสม</th>
+          <th style="width:110px;text-align:right;">ดึงกองกลาง</th>
+          <th style="width:110px;text-align:right;">ขาด 500K</th>
+        </tr></thead>
+        <tbody id="plTableBody"></tbody>
+        <tfoot id="plTableFoot"></tfoot>
+      </table>
+    </div>
+    <div id="plTableEmpty" style="text-align:center;padding:20px;color:var(--muted);font-size:13px;display:none;">ยังไม่มีข้อมูล — โหลดข้อมูลก่อน</div>
   </div>
 
   <!-- ROW 1: ยอดปัจจุบัน vs ยอดสิ้นเดือน -->
@@ -1537,10 +1593,6 @@ async function switchMonth(idx) {
   });
   D = {}; charts = {};
   $('brandSub').textContent = 'รายรับรายจ่าย — ' + m.label;
-  const cf2lbl = $('cf2-monthLabel');
-  if(cf2lbl) cf2lbl.textContent = m.label;
-  const cf2sel = $('cf2-monthSelect');
-  if(cf2sel) cf2sel.value = currentMonthIdx;
   console.log('Switching to:', m.label, 'sheetId:', m.sheetId);
   await loadAll(true);
 }
@@ -1879,10 +1931,110 @@ function switchSection(sec, btn) {
 // CASHFLOW — load & render
 // ══════════════════════════════════════════════
 let cashflowData = null;
-let cf2MonthIdx = null; // เดือนที่ cashflow tab กำลังดูอยู่ (แยกจาก global)
-const CF_TARGET = 500000;
+let cf2MonthIdx  = null;
+const CF_TARGET  = 500000;
 
-// เรียกเมื่อกดเข้า cashflow section — sync กับเดือนปัจจุบัน แล้วโหลด
+// cache summary ทุกเดือน { label → { income, expense, net, cfDraw, kbal } }
+const plCache = {};
+
+async function fetchSummaryForMonth(m) {
+  if(plCache[m.label]) return plCache[m.label];
+  const sumGid = m.gids?.summary || '';
+  if(!sumGid) return null;
+  const url = 'https://docs.google.com/spreadsheets/d/e/' + m.sheetId +
+              '/pub?output=csv&gid=' + sumGid + '&t=' + Date.now();
+  const csv = await fetchCSVWithTimeout(url, 10000);
+  if(!csv) return null;
+  const rows = parseCSV(csv);
+  const get  = i => parseNum(rows[i]?.[1]);
+  const data = {
+    income:  get(2),
+    expense: get(3),
+    net:     get(4),
+    kbal:    get(5),
+    cfDraw:  get(0), // เงินเบิกจากกองกลาง
+  };
+  plCache[m.label] = data;
+  return data;
+}
+
+// โหลด Summary ทุกเดือนพร้อมกัน (parallel)
+async function loadAllSummaries() {
+  $('plTableLoading').style.display = 'block';
+  await Promise.all(MONTHS.map(m => fetchSummaryForMonth(m)));
+  $('plTableLoading').style.display = 'none';
+  renderPLTable();
+}
+
+function renderPLTable() {
+  const tbody = $('plTableBody');
+  const tfoot = $('plTableFoot');
+  const empty = $('plTableEmpty');
+  if(!tbody) return;
+
+  const months = MONTHS.map(m => ({ label: m.label, ...(plCache[m.label] || null) }))
+                       .filter(m => m.income !== undefined);
+
+  if(!months.length) { empty.style.display='block'; tbody.innerHTML=''; return; }
+  empty.style.display = 'none';
+
+  let cumPL = 0;
+  tbody.innerHTML = months.map(m => {
+    cumPL += m.net || 0;
+    const netCol  = (m.net||0) >= 0 ? 'var(--green)' : 'var(--red)';
+    const cumCol  = cumPL >= 0 ? 'var(--green)' : 'var(--red)';
+    const cfGap   = (m.kbal||0) - CF_TARGET;
+    const cfGapCol= cfGap >= 0 ? 'var(--green)' : 'var(--red)';
+    return `<tr>
+      <td style="font-weight:600;">${m.label}</td>
+      <td class="num" style="color:var(--green);">${fmtFull(m.income||0)}</td>
+      <td class="num" style="color:var(--red);">${fmtFull(m.expense||0)}</td>
+      <td class="num" style="color:${netCol};font-weight:600;">${fmtFull(m.net||0)}</td>
+      <td class="num" style="color:${cumCol};font-weight:600;">${fmtFull(cumPL)}</td>
+      <td class="num" style="color:var(--yellow);">${(m.cfDraw||0)>0 ? '-'+fmtFull(m.cfDraw) : '—'}</td>
+      <td class="num" style="color:${cfGapCol};">${cfGap!==0?(cfGap>0?'+':'')+fmtShort(cfGap):'—'}</td>
+    </tr>`;
+  }).join('');
+
+  // footer รวม
+  const totIncome  = months.reduce((s,m)=>s+(m.income||0),0);
+  const totExpense = months.reduce((s,m)=>s+(m.expense||0),0);
+  const totNet     = months.reduce((s,m)=>s+(m.net||0),0);
+  const totDraw    = months.reduce((s,m)=>s+(m.cfDraw||0),0);
+  const netCol     = totNet >= 0 ? 'var(--green)' : 'var(--red)';
+  tfoot.innerHTML = `<tr style="border-top:1px solid var(--border);">
+    <td style="font-weight:700;color:var(--muted);">รวม</td>
+    <td class="num" style="color:var(--green);font-weight:700;">${fmtFull(totIncome)}</td>
+    <td class="num" style="color:var(--red);font-weight:700;">${fmtFull(totExpense)}</td>
+    <td class="num" style="color:${netCol};font-weight:700;">${fmtFull(totNet)}</td>
+    <td class="num" style="color:${netCol};font-weight:700;">${fmtFull(totNet)}</td>
+    <td class="num" style="color:var(--yellow);font-weight:700;">${totDraw>0?'-'+fmtFull(totDraw):'—'}</td>
+    <td class="num">—</td>
+  </tr>`;
+}
+
+function renderPLSummaryBox(monthLabel) {
+  const d = plCache[monthLabel];
+  const box = $('plSummaryBox');
+  if(!d || !box) return;
+  box.style.display = 'block';
+  $('pl-monthLabel').textContent = monthLabel;
+  $('pl-income').textContent  = fmtFull(d.income||0);
+  $('pl-expense').textContent = fmtFull(d.expense||0);
+  const net = d.net||0;
+  $('pl-net').textContent  = fmtFull(net);
+  $('pl-net').style.color  = net>=0?'var(--green)':'var(--red)';
+  const draw = d.cfDraw||0;
+  $('pl-cf-draw').textContent = draw>0 ? '-'+fmtFull(draw) : '฿0';
+  const totalLoss = net - draw;
+  $('pl-total-loss').textContent = fmtFull(totalLoss);
+  const kbal = d.kbal||0;
+  const cfGap = kbal - CF_TARGET;
+  $('pl-cf-gap').textContent = fmtShort(cfGap);
+  $('pl-cf-gap').style.color = cfGap>=0?'var(--green)':'var(--red)';
+}
+
+// เรียกเมื่อกดเข้า cashflow section
 async function loadCashflowSection() {
   cf2MonthIdx = currentMonthIdx;
   const cf2sel = $('cf2-monthSelect');
@@ -1890,7 +2042,9 @@ async function loadCashflowSection() {
   const cf2lbl = $('cf2-monthLabel');
   if(cf2lbl) cf2lbl.textContent = MONTHS[cf2MonthIdx]?.label || '—';
   cashflowData = null;
-  await loadCashflow();
+  // โหลดทั้ง: cashflow central fund + summary ทุกเดือนพร้อมกัน
+  await Promise.all([loadCashflow(), loadAllSummaries()]);
+  renderPLSummaryBox(MONTHS[cf2MonthIdx]?.label);
 }
 
 // เรียกเมื่อเปลี่ยน dropdown ใน cashflow tab
@@ -1899,58 +2053,37 @@ async function switchCf2Month(idx) {
   const cf2lbl = $('cf2-monthLabel');
   if(cf2lbl) cf2lbl.textContent = MONTHS[cf2MonthIdx]?.label || '—';
 
-  // โหลด Summary ของเดือนที่เลือกเพื่อเอายอด kbal
   const m = MONTHS[cf2MonthIdx];
-  const sumGid = m.gids?.summary || '';
-  let kbalNow = null;
-  if(sumGid) {
-    const url = 'https://docs.google.com/spreadsheets/d/e/' + m.sheetId + '/pub?output=csv&gid=' + sumGid + '&t=' + Date.now();
-    const csv = await fetchCSVWithTimeout(url, 10000);
-    if(csv) {
-      const rows = parseCSV(csv);
-      if(rows[5] && rows[5][1] !== undefined) kbalNow = parseNum(rows[5][1]);
-    }
-  }
-  // render ด้วยยอดใหม่ แต่ยัง reuse cashflowData (Central Fund ไม่เปลี่ยน)
+  const d = await fetchSummaryForMonth(m);
+  const kbalNow = d ? d.kbal : null;
   renderCashflow({ ...(cashflowData||{}), balanceNow: kbalNow });
+  renderPLSummaryBox(m.label);
 }
 
 async function loadCashflow(force) {
-  // ยอดจริง ณ ปัจจุบัน — จาก s-kbal (DOM) ซึ่งโหลดมาจาก Summary เดือนนี้
   const kbalNow = getCashflowBalance();
-
-  // ถ้าไม่มี CENTRAL_FUND_SHEET_ID → แสดงแค่ยอดจาก s-kbal พร้อม placeholder
   if(!CENTRAL_FUND_SHEET_ID) {
     renderCashflow({ balanceNow: kbalNow, cfMonthRows: null, topupRows: null });
     return;
   }
-
   if(cashflowData && !force) {
     renderCashflow({ ...cashflowData, balanceNow: kbalNow });
     return;
   }
-
   const bust = Date.now();
   const baseUrl = 'https://docs.google.com/spreadsheets/d/e/' + CENTRAL_FUND_SHEET_ID;
-
-  // Fetch tab Cashflow (ยอดสิ้นเดือน) และ tab บันทึกรายการ (top-up log) พร้อมกัน
   const [cfCsv, logCsv] = await Promise.all([
     fetchCSVWithTimeout(baseUrl + '/pub?output=csv&gid=' + CF_GID_CASHFLOW + '&t=' + bust, 10000),
     fetchCSVWithTimeout(baseUrl + '/pub?output=csv&gid=' + CF_GID_LOG      + '&t=' + bust, 10000),
   ]);
-
   const cfRows  = cfCsv  ? parseCSV(cfCsv)  : null;
   const logRows = logCsv ? parseCSV(logCsv) : null;
-
-  // Cache central fund log ด้วย (ใช้ร่วมกับ Central Fund tab)
   if(logRows) centralFundData = logRows;
-
   cashflowData = { cfMonthRows: cfRows, topupRows: logRows };
   renderCashflow({ ...cashflowData, balanceNow: kbalNow });
 }
 
 function getCashflowBalance() {
-  // อ่านจาก D.summary โดยตรง — ถูกต้องเสมอไม่ว่าจะเลือกเดือนไหน
   if(D.summary && D.summary[5] && D.summary[5][1] !== undefined) {
     const val = parseNum(D.summary[5][1]);
     if(!isNaN(val)) return val;
@@ -2104,15 +2237,9 @@ async function loadCentralFund(force) {
   }
 
   const cacheBust = Date.now();
-  const base = 'https://docs.google.com/spreadsheets/d/e/' + CENTRAL_FUND_SHEET_ID;
-  const logUrl  = base + '/pub?output=csv&gid=' + CF_GID_LOG      + '&t=' + cacheBust;
-  const cfUrl   = base + '/pub?output=csv&gid=' + CF_GID_CASHFLOW + '&t=' + cacheBust;
-  console.log('CF: fetching log tab', logUrl.substring(0,120));
-
-  const [csv, cfCsv] = await Promise.all([
-    fetchCSVWithTimeout(logUrl, 10000),
-    fetchCSVWithTimeout(cfUrl,  10000),
-  ]);
+  const baseUrl = 'https://docs.google.com/spreadsheets/d/e/' + CENTRAL_FUND_SHEET_ID + '/pub?output=csv&t=' + cacheBust;
+  console.log('CF: fetching', baseUrl.substring(0,120));
+  const csv = await fetchCSVWithTimeout(baseUrl, 10000);
 
   if(!csv) {
     content.innerHTML = '<div style="padding:24px;text-align:center;color:var(--red);">โหลดชีทกองกลางไม่ได้ — ตรวจสอบ Publish to Web และ sheetId ใน Config</div>';
@@ -2121,8 +2248,6 @@ async function loadCentralFund(force) {
 
   const rows = parseCSV(csv);
   centralFundData = rows;
-  // cache cashflow rows ให้ loadCashflow ใช้ร่วมได้
-  if(cfCsv) cashflowData = { cfMonthRows: parseCSV(cfCsv), topupRows: rows };
   renderCentralFund(rows);
 }
 
