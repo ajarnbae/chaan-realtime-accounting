@@ -524,7 +524,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   <!-- Month indicator -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
     <div style="font-size:13px;color:var(--muted);">ดูข้อมูลเดือน: <span id="cf2-monthLabel" style="color:var(--text);font-weight:600;">—</span></div>
-    <select onchange="switchMonth(this.value)" id="cf2-monthSelect"
+    <select onchange="switchCf2Month(this.value)" id="cf2-monthSelect"
       style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:4px 10px;color:var(--text);font-family:'Sarabun',sans-serif;font-size:12px;cursor:pointer;">
     </select>
   </div>
@@ -1871,7 +1871,7 @@ function switchSection(sec, btn) {
   if(sec==='growth') renderGrowth();
   if(sec==='months') renderMMList();
   if(sec==='central') loadCentralFund();
-  if(sec==='cashflow') { cashflowData = null; loadCashflow(); }
+  if(sec==='cashflow') { cashflowData = null; loadCashflowSection(); }
   if(sec==='wedding') loadWeddingMaster();
 }
 
@@ -1879,7 +1879,41 @@ function switchSection(sec, btn) {
 // CASHFLOW — load & render
 // ══════════════════════════════════════════════
 let cashflowData = null;
+let cf2MonthIdx = null; // เดือนที่ cashflow tab กำลังดูอยู่ (แยกจาก global)
 const CF_TARGET = 500000;
+
+// เรียกเมื่อกดเข้า cashflow section — sync กับเดือนปัจจุบัน แล้วโหลด
+async function loadCashflowSection() {
+  cf2MonthIdx = currentMonthIdx;
+  const cf2sel = $('cf2-monthSelect');
+  if(cf2sel) cf2sel.value = cf2MonthIdx;
+  const cf2lbl = $('cf2-monthLabel');
+  if(cf2lbl) cf2lbl.textContent = MONTHS[cf2MonthIdx]?.label || '—';
+  cashflowData = null;
+  await loadCashflow();
+}
+
+// เรียกเมื่อเปลี่ยน dropdown ใน cashflow tab
+async function switchCf2Month(idx) {
+  cf2MonthIdx = parseInt(idx);
+  const cf2lbl = $('cf2-monthLabel');
+  if(cf2lbl) cf2lbl.textContent = MONTHS[cf2MonthIdx]?.label || '—';
+
+  // โหลด Summary ของเดือนที่เลือกเพื่อเอายอด kbal
+  const m = MONTHS[cf2MonthIdx];
+  const sumGid = m.gids?.summary || '';
+  let kbalNow = null;
+  if(sumGid) {
+    const url = 'https://docs.google.com/spreadsheets/d/e/' + m.sheetId + '/pub?output=csv&gid=' + sumGid + '&t=' + Date.now();
+    const csv = await fetchCSVWithTimeout(url, 10000);
+    if(csv) {
+      const rows = parseCSV(csv);
+      if(rows[5] && rows[5][1] !== undefined) kbalNow = parseNum(rows[5][1]);
+    }
+  }
+  // render ด้วยยอดใหม่ แต่ยัง reuse cashflowData (Central Fund ไม่เปลี่ยน)
+  renderCashflow({ ...(cashflowData||{}), balanceNow: kbalNow });
+}
 
 async function loadCashflow(force) {
   // ยอดจริง ณ ปัจจุบัน — จาก s-kbal (DOM) ซึ่งโหลดมาจาก Summary เดือนนี้
