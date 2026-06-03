@@ -2072,9 +2072,15 @@ async function loadCentralFund(force) {
   }
 
   const cacheBust = Date.now();
-  const baseUrl = 'https://docs.google.com/spreadsheets/d/e/' + CENTRAL_FUND_SHEET_ID + '/pub?output=csv&t=' + cacheBust;
-  console.log('CF: fetching', baseUrl.substring(0,120));
-  const csv = await fetchCSVWithTimeout(baseUrl, 10000);
+  const base = 'https://docs.google.com/spreadsheets/d/e/' + CENTRAL_FUND_SHEET_ID;
+  const logUrl  = base + '/pub?output=csv&gid=' + CF_GID_LOG      + '&t=' + cacheBust;
+  const cfUrl   = base + '/pub?output=csv&gid=' + CF_GID_CASHFLOW + '&t=' + cacheBust;
+  console.log('CF: fetching log tab', logUrl.substring(0,120));
+
+  const [csv, cfCsv] = await Promise.all([
+    fetchCSVWithTimeout(logUrl, 10000),
+    fetchCSVWithTimeout(cfUrl,  10000),
+  ]);
 
   if(!csv) {
     content.innerHTML = '<div style="padding:24px;text-align:center;color:var(--red);">โหลดชีทกองกลางไม่ได้ — ตรวจสอบ Publish to Web และ sheetId ใน Config</div>';
@@ -2083,6 +2089,8 @@ async function loadCentralFund(force) {
 
   const rows = parseCSV(csv);
   centralFundData = rows;
+  // cache cashflow rows ให้ loadCashflow ใช้ร่วมได้
+  if(cfCsv) cashflowData = { cfMonthRows: parseCSV(cfCsv), topupRows: rows };
   renderCentralFund(rows);
 }
 
