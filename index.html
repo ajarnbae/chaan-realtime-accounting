@@ -1537,6 +1537,10 @@ async function switchMonth(idx) {
   });
   D = {}; charts = {};
   $('brandSub').textContent = 'รายรับรายจ่าย — ' + m.label;
+  const cf2lbl = $('cf2-monthLabel');
+  if(cf2lbl) cf2lbl.textContent = m.label;
+  const cf2sel = $('cf2-monthSelect');
+  if(cf2sel) cf2sel.value = currentMonthIdx;
   console.log('Switching to:', m.label, 'sheetId:', m.sheetId);
   await loadAll(true);
 }
@@ -1867,7 +1871,7 @@ function switchSection(sec, btn) {
   if(sec==='growth') renderGrowth();
   if(sec==='months') renderMMList();
   if(sec==='central') loadCentralFund();
-  if(sec==='cashflow') loadCashflow();
+  if(sec==='cashflow') { cashflowData = null; loadCashflow(); }
   if(sec==='wedding') loadWeddingMaster();
 }
 
@@ -1912,16 +1916,10 @@ async function loadCashflow(force) {
 }
 
 function getCashflowBalance() {
-  // ยอดคงเหลือกสิกร is row index 5 (0-based) in summary, col B
-  // Summary structure: row0=header labels, rows 1-12 = data
-  // s-kbal already rendered by renderSummary — read from DOM
-  const kbalEl = document.getElementById('s-kbal');
-  if(kbalEl && kbalEl.textContent !== '—') {
-    // parse the formatted number back
-    const txt = kbalEl.textContent.replace(/[฿,KMBk]/g,'').trim();
-    const mult = kbalEl.textContent.includes('K') ? 1000 :
-                 kbalEl.textContent.includes('M') ? 1000000 : 1;
-    return parseFloat(txt) * mult;
+  // อ่านจาก D.summary โดยตรง — ถูกต้องเสมอไม่ว่าจะเลือกเดือนไหน
+  if(D.summary && D.summary[5] && D.summary[5][1] !== undefined) {
+    const val = parseNum(D.summary[5][1]);
+    if(!isNaN(val)) return val;
   }
   return null;
 }
